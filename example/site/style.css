@@ -1,0 +1,27 @@
+/* This campaign's own stylesheet: everything that is about these words and this
+   subject rather than about the system. It loads after campaignlanding.css, so
+   anything here wins.
+
+   For most campaigns this file stays about this short. If it starts growing a
+   second copy of the system, that is a sign the system needs a token rather than
+   this file needing a rule. */
+
+:root {
+  /* How wide the headline runs per 1px of font size, including the mark beside
+     it. The hero sizes its type from this so the line shrinks to fit instead of
+     wrapping, which means it has to be measured for your own words:
+
+       const h1 = document.querySelector('.hero h1');
+       h1.scrollWidth / parseFloat(getComputedStyle(h1).fontSize)
+
+     Read it at a wide window, round up a little, and set it here. These two were
+     derived from the headline lengths rather than measured in a browser, which
+     is close enough for an example page and not close enough for yours. */
+  --h1-ratio: 16.5;
+}
+
+html[lang="es"] {
+  /* The Spanish headline is half again as long as the English one. This is why
+     the ratio is per-language: one value fits one headline. */
+  --h1-ratio: 23.5;
+}

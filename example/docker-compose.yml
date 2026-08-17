@@ -1,0 +1,47 @@
+# The example, deployable. Two things are worth copying into your own:
+#
+#   - the data volume is a host directory, not a named volume, so the signup file
+#     is a file on a disk you can read with `cat` and back up with `cp`
+#   - the admin password hash is NOT in this file and NOT in .env, for a reason
+#     the .env.example explains at length
+#
+# If you use nginx-proxy and acme-companion, uncomment VIRTUAL_HOST and
+# LETSENCRYPT_HOST and join their network. Otherwise put whatever proxy you have
+# in front of port 8100.
+
+services:
+  campaign:
+    build:
+      context: ..
+      dockerfile: example/Dockerfile
+    container_name: campaign-example
+    restart: unless-stopped
+    # Run as a real user so signups.jsonl is owned by you and readable over plain
+    # SSH. The image's own unprivileged user would write files you cannot read
+    # without sudo, which breaks the "just read the file" workflow that is half
+    # the point of storing it this way.
+    user: "1000:1000"
+    ports:
+      - "8100:8100"
+    environment:
+      # - VIRTUAL_HOST=example.org,www.example.org
+      # - VIRTUAL_PORT=8100
+      # Lead with the canonical name. acme.sh keys a certificate on the first
+      # name and treats later ones as alternates, so adding a name to the end of
+      # an existing list can log "Domains not changed. Skipping" and leave the
+      # certificate on disk without it.
+      # - LETSENCRYPT_HOST=example.org,www.example.org
+      # - LETSENCRYPT_EMAIL=you@example.org
+      - CAMPAIGN_DATA=/data
+    env_file:
+      - .env
+    volumes:
+      # Signups land here. Not in the repo, not in the image, and not in a backup
+      # that goes to a third party without someone deciding it should.
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8100/healthz')"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

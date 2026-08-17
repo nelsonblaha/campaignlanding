@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+# Never commit the real one: a password hash in git can be attacked offline.
+.env

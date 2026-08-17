@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark light">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Biblioteca de Herramientas Ridgeline</title>
+<link rel="icon" type="image/svg+xml" href="/img/mark.svg">
+<meta name="description" content="Una página de ejemplo hecha con campaignlanding: una propuesta para una biblioteca de herramientas, con lo que costaría, quién la dirigiría y lo que todavía no existe.">
+<link rel="alternate" hreflang="en" href="/">
+<link rel="alternate" hreflang="es" href="/es/">
+<link rel="alternate" hreflang="x-default" href="/">
+<link rel="stylesheet" href="/campaignlanding.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="sectionnav" aria-label="Secciones">
+  <div class="nav-top">
+    <div class="nav-dock">
+      <button class="nav-icon nav-home" type="button" aria-label="Volver arriba" title="Volver arriba"><img class="nav-logo" src="/img/mark.svg" alt="" width="64" height="64"></button>
+      <div class="nav-lang" aria-hidden="true">
+        <a class="nav-flag" href="/en/" lang="en" hreflang="en" aria-label="Switch to English" tabindex="-1">🇺🇸</a>
+        <span class="nav-flag is-current" aria-current="page" lang="es" aria-label="Español">🇲🇽</span>
+      </div>
+    </div>
+    <div class="nav-social">
+      <button class="nav-icon nav-copy" type="button" aria-label="Copiar el enlace de esta página" title="Copiar el enlace de esta página"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10.2 13.8a4.4 4.4 0 0 0 6.6.5l2.6-2.6a4.4 4.4 0 0 0-6.2-6.2l-1.5 1.5"/><path d="M13.8 10.2a4.4 4.4 0 0 0-6.6-.5l-2.6 2.6a4.4 4.4 0 0 0 6.2 6.2l1.5-1.5"/></svg></button>
+    </div>
+  </div>
+  <a href="#razones" data-slug="por-que"><span class="nav-long">Por qué</span><span class="nav-short">Por qué</span><span class="nav-min" aria-hidden="true">?</span></a>
+  <a href="#propuesta" data-slug="la-propuesta"><span class="nav-long">La propuesta</span><span class="nav-short">Plan</span></a>
+  <a href="#hoja-de-ruta" data-slug="hoja-de-ruta"><span class="nav-long">Hoja de ruta</span><span class="nav-short">Pasos</span></a>
+  <a href="#ayudar" data-slug="como-ayudar"><span class="nav-long">Cómo ayudar</span><span class="nav-short">Ayudar</span></a>
+</nav>
+
+<header class="hero" id="top" data-section="hero">
+  <div class="wrap">
+    <nav class="langbar" aria-label="Idioma">
+      <a href="/en/" lang="en" hreflang="en"><span class="flag" aria-hidden="true">🇺🇸</span><span class="lang-word">English</span></a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span aria-current="page" lang="es"><span class="flag" aria-hidden="true">🇲🇽</span><span class="lang-word">Español</span></span>
+    </nav>
+    <div class="hero-head">
+      <p class="sunline">Una propuesta &middot; Ridgeline &middot; Página de ejemplo</p>
+      <h1><img class="hero-mark" src="/img/mark.svg" alt="" width="64" height="64">Una biblioteca, pero de herramientas.</h1>
+    </div>
+    <div class="hero-in">
+      <p class="lede">Una cortadora de azulejo se usa un fin de semana y luego pasa nueve años en la cochera. Esta es una propuesta para una biblioteca que compre una sola vez lo caro, lo mantenga funcionando y lo preste gratis.</p>
+      <div class="cta-row">
+        <a class="btn btn-with-sub" href="#signup">
+          <span class="btn-stack"><span>Recibir avisos</span><!--JOIN-INLINE--></span>
+          <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="btn" href="#razones">Por qué &rarr;</a>
+        <a class="btn" href="https://github.com/nelsonblaha/campaignlanding">Ver el código &rarr;</a>
+      </div>
+      <p class="fine">Todavía no existe nada. Registrarte te trae correos ocasionales sobre esto y nada más.</p>
+    </div>
+    <div class="hero-more">
+      <p class="lede">Esta página es el ejemplo que viene con <strong>campaignlanding</strong>. La Biblioteca de Herramientas Ridgeline es inventada, y cada cifra está hecha para mostrar cómo se vería una de verdad.</p>
+    </div>
+    <figure class="hero-figure">
+      <img src="/img/shelf.svg" width="704" height="880" decoding="async"
+           alt="Un estante de herramientas estilizado: filas de repisas con cajas y objetos colgados.">
+      <figcaption class="hero-credit">Ilustración de relleno</figcaption>
+    </figure>
+  </div>
+</header>
+
+<section id="razones" data-section="why" aria-labelledby="razones-label">
+  <div class="wrap stack-lg">
+    <div class="tabs" id="reason-tabs">
+      <div class="tablist" role="tablist" id="razones-label" aria-label="Razones">
+        <button class="tab" role="tab" id="tab-cost" data-slug="costo" aria-controls="panel-cost" aria-selected="true"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.6 9.8h4.2M9.6 14.2h4.2"/></svg><span>Costo</span></button>
+        <button class="tab" role="tab" id="tab-space" data-slug="espacio" aria-controls="panel-space" aria-selected="false"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 10v10h12V10"/></svg><span>Espacio</span></button>
+        <button class="tab" role="tab" id="tab-skills" data-slug="oficio" aria-controls="panel-skills" aria-selected="false"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M4 20c0-3 2.2-5 5-5s5 2 5 5"/><path d="M16 9h4M16 13h4M16 17h4"/></svg><span>Oficio</span></button>
+        <button class="tab" role="tab" id="tab-repair" data-slug="reparacion" aria-controls="panel-repair" aria-selected="false"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 4.5a4.5 4.5 0 0 0-5.8 5.8L4 15l5 5 4.7-4.7a4.5 4.5 0 0 0 5.8-5.8l-3 3-2.8-2.8z"/></svg><span>Reparación</span></button>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-cost" aria-labelledby="tab-cost" tabindex="0">
+        <div class="col stack">
+          <h2><span class="clause">La sierra cuesta $380.</span> <span class="clause">La necesitas una tarde.</span></h2>
+          <p>Casi todo lo que una familia compra para una remodelación se usa una sola vez. Comprado nuevo, el equipo básico para un baño pasa de mil dólares; prestado, es un formulario y una repisa que mantiene alguien más.</p>
+        </div>
+
+        <div class="meter col" id="meter">
+          <div class="bar-row">
+            <div class="bar-head"><span>Comprar el equipo</span><span class="bar-val">$1,140</span></div>
+            <div class="bar-track"><div class="bar-fill" data-w="95"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-head"><span>Rentarlo un fin de semana</span><span class="bar-val">$210</span></div>
+            <div class="bar-track"><div class="bar-fill" data-w="18"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-head"><span>Pedirlo prestado aquí</span><span class="bar-val">$0</span></div>
+            <div class="bar-track"><div class="bar-fill" data-w="2"></div></div>
+          </div>
+        </div>
+
+        <div class="col stack">
+          <p class="fine">Cifras inventadas en una página inventada. Cámbialas por las tuyas, y cítalas: los estilos <code>.ref</code> y <code>.refs</code> están justamente para eso.</p>
+        </div>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-space" aria-labelledby="tab-space" tabindex="0" hidden>
+        <div class="col stack">
+          <h2>Una biblioteca de herramientas es, sobre todo, repisas.</h2>
+          <p>Ochenta metros cuadrados, una cortina metálica y un techo que no gotee. Ese es todo el requisito, y por eso puede empezar en una esquina de un edificio que ya existe en vez de esperar uno que no.</p>
+        </div>
+        <div class="col">
+          <div class="quote">
+            <p>&ldquo;Teníamos el espacio. Nadie nos lo había pedido nunca.&rdquo;</p>
+            <cite>Aquí va una cita, con su fuente<sup class="ref"><a href="#ref-1" title="Fuente 1">[1]</a></sup></cite>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-skills" aria-labelledby="tab-skills" tabindex="0" hidden>
+        <div class="col stack">
+          <h2>Prestarle una herramienta a alguien que nunca la ha usado es como se lastima la gente.</h2>
+          <p>Por eso el mostrador es también una demostración de dos minutos, y todo lo que tiene filo sale con una. Los socios que ya saben usar algo dan el taller de eso que saben.</p>
+          <ul class="ul">
+            <li>Sesiones los sábados, una herramienta por sesión</li>
+            <li>Todo lo eléctrico se demuestra al entregarlo</li>
+            <li>Enseñan los socios; en el primer año nadie cobra por eso</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-repair" aria-labelledby="tab-repair" tabindex="0" hidden>
+        <div class="col stack">
+          <h2>Las cosas regresan rotas. Ese es el trabajo, no una falla del trabajo.</h2>
+          <p>Una biblioteca que no puede reparar lo que presta se convierte en un montón de herramientas rotas en dieciocho meses. El banco de reparación se presupuesta primero y se atiende antes de que crezca la colección, que es justo la parte que casi todas las propuestas omiten.</p>
+        </div>
+        <div class="col">
+          <div class="callout">
+            <p>La versión honesta de un plan dice en qué es peor. Esta es peor en capacidad de reparación, y es lo primero que se va a romper.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="propuesta" data-section="proposal">
+  <div class="wrap stack-lg">
+    <div class="col stack">
+      <p class="eyebrow">La propuesta</p>
+      <h2>Una membresía, no un mostrador de renta.</h2>
+      <p>Los socios pagan lo que pueden una vez al año, eligen a quienes la dirigen y pueden revisar las cuentas. Los niveles de abajo son candidatos, y los socios decidirían los de verdad.</p>
+    </div>
+
+    <div class="tiers col">
+      <div class="tier">
+        <p class="tier-name">Prestatario</p>
+        <p class="tier-price">$0</p>
+        <p class="fine">Cualquiera con domicilio en el pueblo. Tres cosas a la vez, una semana cada una.</p>
+      </div>
+      <div class="tier">
+        <p class="tier-name">Socio</p>
+        <p class="tier-price">$40<span>/año</span></p>
+        <p class="fine">Voto para la junta directiva, seis cosas a la vez y prioridad en los talleres.</p>
+      </div>
+      <div class="tier">
+        <p class="tier-name">Padrino</p>
+        <p class="tier-price">$150<span>/año</span></p>
+        <p class="fine">Lo mismo que un socio. Cuesta más porque alguien tiene que cubrir a quien no paga nada.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="hoja-de-ruta" data-section="roadmap">
+  <div class="wrap stack-lg">
+    <div class="col stack">
+      <p class="eyebrow">Hoja de ruta</p>
+      <p>Escrita para que se note qué partes no han pasado. Nada de lo de abajo está hecho.</p>
+    </div>
+    <div class="col stack">
+      <div class="phase">
+        <p class="phase-n">01</p>
+        <div class="phase-body">
+          <p class="phase-title">Averiguar si alguien lo quiere</p>
+          <p class="fine">La lista de esta página es todo. Doscientos nombres son una señal; veinte también son una respuesta.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <p class="phase-n">02</p>
+        <div class="phase-body">
+          <p class="phase-title">Constituirla, y publicar el trámite</p>
+          <p class="fine">Una organización sin fines de lucro con junta electa, y el papeleo publicado el día que lo acepten.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <p class="phase-n">03</p>
+        <div class="phase-body">
+          <p class="phase-title">Una repisa, cuarenta herramientas, un sábado a la semana</p>
+          <p class="fine">Suficientemente chico para fallar barato y a la vista, que es el punto de empezar ahí.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ayudar" data-section="help">
+  <div class="wrap stack-lg">
+    <div class="col stack">
+      <p class="eyebrow">Cómo puedes ayudar</p>
+      <p>Lo útil ahora mismo es saber que existes. Todo lo demás sale de ahí.</p>
+      <div class="asks">
+        <p class="ask"><span class="ask-n">01</span> Pon tu nombre en la lista</p>
+        <p class="ask"><span class="ask-n">02</span> Dile a alguien con la cochera llena de herramientas</p>
+        <p class="ask"><span class="ask-n">03</span> Dinos si estarías en una junta fundadora</p>
+      </div>
+    </div>
+    <div class="col stack">
+      <div class="cta-row">
+        <a class="btn" href="#signup">Agregar mi nombre &rarr;</a>
+        <!--JOIN-INLINE-->
+      </div>
+      <p class="fine">No pedimos donativos. Todavía no hay a qué donarle.</p>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="signup" role="dialog" aria-modal="true" aria-labelledby="signup-title">
+  <a class="modal-scrim" href="#" tabindex="-1" aria-hidden="true"></a>
+  <div class="modal-card">
+    <a class="modal-close" href="#" aria-label="Cerrar">&times;</a>
+    <h3 id="signup-title">Agregar mi nombre</h3>
+    <form class="form-card" method="post" action="/api/signup">
+      <div class="field">
+        <label for="contact">Correo o teléfono <span aria-hidden="true">*</span></label>
+        <input type="text" id="contact" name="contact" required autocomplete="email" placeholder="tu@ejemplo.com">
+        <p class="hint">Se usa solo para escribirte sobre esto.</p>
+      </div>
+
+      <div class="field">
+        <label for="name">Nombre <span class="hint" style="text-transform:none;letter-spacing:0">(opcional)</span></label>
+        <input type="text" id="name" name="name" autocomplete="name">
+      </div>
+
+      <fieldset class="checks">
+        <legend>Podría ayudar con</legend>
+        <label class="check"><input type="checkbox" name="help" value="updates" checked> Solo mantenerme al tanto</label>
+        <label class="check"><input type="checkbox" name="help" value="board"> Estar en una junta fundadora</label>
+        <label class="check"><input type="checkbox" name="help" value="space"> Un lugar dónde ponerla</label>
+        <label class="check"><input type="checkbox" name="help" value="tools"> Herramientas para donar</label>
+        <label class="check"><input type="checkbox" name="help" value="spread"> Correr la voz</label>
+      </fieldset>
+
+      <div class="field">
+        <label for="note">Lo que quieras decir <span class="hint" style="text-transform:none;letter-spacing:0">(opcional)</span></label>
+        <textarea id="note" name="note" rows="3"></textarea>
+      </div>
+
+      <div class="hp" aria-hidden="true">
+        <label for="website">Deja esto vacío</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+      <input type="hidden" name="t" id="t" value="">
+      <input type="hidden" name="lang" value="es">
+
+      <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
+      <div class="cta-row">
+        <button class="btn" type="submit">Registrarme &rarr;</button>
+        <a class="btn btn-quiet" href="#" data-modal-close>Cancelar</a>
+      </div>
+      <p class="fine form-provenance">Este formulario se envía al servidor de esta misma página y escribe en un archivo en disco. <a href="https://github.com/nelsonblaha/campaignlanding">Puedes leer el código que lo recibe</a>.</p>
+    </form>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="col stack">
+      <p class="eyebrow">Sobre esta página</p>
+      <p class="fine">La Biblioteca de Herramientas Ridgeline no existe. Este es el ejemplo que viene con campaignlanding, escrito completo a propósito: una plantilla con texto de relleno no te dice nada de cómo se lee la cosa terminada.</p>
+
+      <p class="eyebrow">Fuentes</p>
+      <ol class="refs">
+        <li id="ref-1">Aquí iría una cita. <cite>Una publicación</cite>, <a href="https://github.com/nelsonblaha/campaignlanding">un enlace</a> (una fecha)</li>
+      </ol>
+
+      <p class="fine">Sin rastreadores, sin cookies de publicidad, sin analítica y sin servicios de formularios de terceros. Eso es una propiedad del software, no una promesa en una página: el registro se envía a este servidor y escribe en un archivo, y el código que lo recibe es público.</p>
+    </div>
+  </div>
+</footer>
+
+<!--JOIN-TAG-->
+
+<script src="/campaignlanding.js"></script>
+</body>
+</html>

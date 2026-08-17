@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="">
+  <!-- A nut: the most generic tool-shaped thing there is. Colour is baked in
+       rather than inherited, because this is used as a favicon too, and a
+       favicon has no cascade to inherit from. -->
+  <path d="M32 4 55.6 17.6v27.2L32 60 8.4 44.8V17.6z" fill="none" stroke="#F0A32C" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="9.5" fill="none" stroke="#F0A32C" stroke-width="6"/>
+</svg>

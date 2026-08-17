@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="dark light">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ridgeline Tool Library</title>
+<link rel="icon" type="image/svg+xml" href="/img/mark.svg">
+<meta name="description" content="An example page built with campaignlanding: a proposal for a lending library of tools, with what it would cost, who would run it, and what does not exist yet.">
+<link rel="alternate" hreflang="en" href="/">
+<link rel="alternate" hreflang="es" href="/es/">
+<link rel="alternate" hreflang="x-default" href="/">
+<!-- The system first, then this campaign's own overrides. Both are served with a
+     content hash, so neither can go stale in a cache. -->
+<link rel="stylesheet" href="/campaignlanding.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- ============ SECTION NAV ============
+     One nav, two presentations: a fixed rail on the left edge at desktop widths,
+     and a sticky strip at the top on narrow screens. Plain anchors, so it works
+     with no JS; the script adds the scroll-spy marker and tap-to-copy. -->
+<nav class="sectionnav" aria-label="Sections">
+  <div class="nav-top">
+    <div class="nav-dock">
+      <button class="nav-icon nav-home" type="button" aria-label="Back to top" title="Back to top"><img class="nav-logo" src="/img/mark.svg" alt="" width="64" height="64"></button>
+      <div class="nav-lang" aria-hidden="true">
+        <span class="nav-flag is-current" aria-current="page" lang="en" aria-label="English">🇺🇸</span>
+        <a class="nav-flag" href="/es/" lang="es" hreflang="es" aria-label="Cambiar a español" tabindex="-1">🇲🇽</a>
+      </div>
+    </div>
+    <div class="nav-social">
+      <button class="nav-icon nav-copy" type="button" aria-label="Copy link to this page" title="Copy link to this page"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M10.2 13.8a4.4 4.4 0 0 0 6.6.5l2.6-2.6a4.4 4.4 0 0 0-6.2-6.2l-1.5 1.5"/><path d="M13.8 10.2a4.4 4.4 0 0 0-6.6-.5l-2.6 2.6a4.4 4.4 0 0 0 6.2 6.2l1.5-1.5"/></svg></button>
+    </div>
+  </div>
+  <a href="#reasons" data-slug="why"><span class="nav-long">Why</span><span class="nav-short">Why</span><span class="nav-min" aria-hidden="true">?</span></a>
+  <a href="#proposal" data-slug="the-proposal"><span class="nav-long">The proposal</span><span class="nav-short">Plan</span></a>
+  <a href="#roadmap" data-slug="roadmap"><span class="nav-long">Roadmap</span><span class="nav-short">Steps</span></a>
+  <a href="#help" data-slug="how-to-help"><span class="nav-long">How to help</span><span class="nav-short">Help</span></a>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top" data-section="hero">
+  <div class="wrap">
+    <nav class="langbar" aria-label="Language">
+      <span aria-current="page" lang="en"><span class="flag" aria-hidden="true">🇺🇸</span><span class="lang-word">English</span></span>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="/es/" lang="es" hreflang="es"><span class="flag" aria-hidden="true">🇲🇽</span><span class="lang-word">Español</span></a>
+    </nav>
+    <div class="hero-head">
+      <p class="sunline">A proposal &middot; Ridgeline &middot; Example page</p>
+      <h1><img class="hero-mark" src="/img/mark.svg" alt="" width="64" height="64">A library, but for tools.</h1>
+    </div>
+    <div class="hero-in">
+      <p class="lede">A tile saw gets used for one weekend and then sits in a garage for nine years. This is a proposal for a lending library that buys the expensive things once, keeps them working, and lends them out for free.</p>
+      <div class="cta-row">
+        <a class="btn btn-with-sub" href="#signup">
+          <span class="btn-stack"><span>Get updates</span><!--JOIN-INLINE--></span>
+          <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="btn" href="#reasons">Why &rarr;</a>
+        <a class="btn" href="https://github.com/nelsonblaha/campaignlanding">Read the code &rarr;</a>
+      </div>
+      <p class="fine">Nothing exists yet. Signing up gets you occasional email about this and nothing else.</p>
+    </div>
+    <div class="hero-more">
+      <p class="lede">This page is the example that ships with <strong>campaignlanding</strong>. Ridgeline Tool Library is invented, and every number on it is made up to show what a real one would look like.</p>
+    </div>
+    <figure class="hero-figure">
+      <img src="/img/shelf.svg" width="704" height="880" decoding="async"
+           alt="A stylised rack of tools: rows of shelves holding boxed and hanging items.">
+      <figcaption class="hero-credit">Placeholder illustration</figcaption>
+    </figure>
+  </div>
+</header>
+
+<!-- ============ REASONS (TABS) ============
+     Four arguments, one section. Each tab has a data-slug, so /cost is a real
+     address that opens this section with that tab selected. -->
+<section id="reasons" data-section="why" aria-labelledby="reasons-label">
+  <div class="wrap stack-lg">
+    <div class="tabs" id="reason-tabs">
+      <div class="tablist" role="tablist" id="reasons-label" aria-label="Reasons">
+        <button class="tab" role="tab" id="tab-cost" data-slug="cost" aria-controls="panel-cost" aria-selected="true"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.6 9.8h4.2M9.6 14.2h4.2"/></svg><span>Cost</span></button>
+        <button class="tab" role="tab" id="tab-space" data-slug="space" aria-controls="panel-space" aria-selected="false"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 10v10h12V10"/></svg><span>Space</span></button>
+        <button class="tab" role="tab" id="tab-skills" data-slug="skills" aria-controls="panel-skills" aria-selected="false"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3"/><path d="M4 20c0-3 2.2-5 5-5s5 2 5 5"/><path d="M16 9h4M16 13h4M16 17h4"/></svg><span>Skills</span></button>
+        <button class="tab" role="tab" id="tab-repair" data-slug="repair" aria-controls="panel-repair" aria-selected="false"><svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.5 4.5a4.5 4.5 0 0 0-5.8 5.8L4 15l5 5 4.7-4.7a4.5 4.5 0 0 0 5.8-5.8l-3 3-2.8-2.8z"/></svg><span>Repair</span></button>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-cost" aria-labelledby="tab-cost" tabindex="0">
+        <div class="col stack">
+          <h2><span class="clause">The saw costs $380.</span> <span class="clause">You need it for one afternoon.</span></h2>
+          <p>Most of what a household buys for a renovation is used once. Bought new, a starter set for one bathroom runs past a thousand dollars; borrowed, the same set is a form you fill in and a shelf someone else maintains.</p>
+        </div>
+
+        <div class="meter col" id="meter">
+          <div class="bar-row">
+            <div class="bar-head"><span>Buying the set outright</span><span class="bar-val">$1,140</span></div>
+            <div class="bar-track"><div class="bar-fill" data-w="95"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-head"><span>Renting it for a weekend</span><span class="bar-val">$210</span></div>
+            <div class="bar-track"><div class="bar-fill" data-w="18"></div></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-head"><span>Borrowing it here</span><span class="bar-val">$0</span></div>
+            <div class="bar-track"><div class="bar-fill" data-w="2"></div></div>
+          </div>
+        </div>
+
+        <div class="col stack">
+          <p class="fine">Made-up figures on a made-up page. Replace them with your own, and cite them: the <code>.ref</code> and <code>.refs</code> styles are there for exactly that.</p>
+        </div>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-space" aria-labelledby="tab-space" tabindex="0" hidden>
+        <div class="col stack">
+          <h2>A tool library is mostly shelving.</h2>
+          <p>Eight hundred square feet, a roll-up door, and somewhere dry. That is the entire facilities requirement, which is why this can start in a corner of a building that already exists rather than waiting on one that does not.</p>
+        </div>
+        <div class="col">
+          <div class="quote">
+            <p>&ldquo;We had the room. Nobody had ever asked us for it.&rdquo;</p>
+            <cite>A quote goes here, with a citation<sup class="ref"><a href="#ref-1" title="Source 1">[1]</a></sup></cite>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-skills" aria-labelledby="tab-skills" tabindex="0" hidden>
+        <div class="col stack">
+          <h2>Lending a tool to someone who has never used one is how people get hurt.</h2>
+          <p>So the checkout desk is also a two-minute demonstration, and anything with a blade comes with one. Members who already know how to use a thing teach the class for the thing they know.</p>
+          <ul class="ul">
+            <li>Saturday sessions, one tool per session</li>
+            <li>Anything powered gets a demonstration at checkout</li>
+            <li>Members teach; nobody is paid for it in year one</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="panel stack-lg" role="tabpanel" id="panel-repair" aria-labelledby="tab-repair" tabindex="0" hidden>
+        <div class="col stack">
+          <h2>Things come back broken. That is the job, not a failure of it.</h2>
+          <p>A lending library that cannot fix what it lends becomes a pile of broken tools in eighteen months. The repair bench is budgeted first and staffed before the collection grows, which is the part most proposals leave out.</p>
+        </div>
+        <div class="col">
+          <div class="callout">
+            <p>The honest version of a plan says what it is worst at. This one is worst at repair capacity, and it is the first thing that will break.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE PROPOSAL ============ -->
+<section id="proposal" data-section="proposal">
+  <div class="wrap stack-lg">
+    <div class="col stack">
+      <p class="eyebrow">The proposal</p>
+      <h2>A membership, not a rental counter.</h2>
+      <p>Members pay what they can once a year, elect the people who run it, and can read the books. The tiers below are candidates for what those memberships could be, and members would decide the real ones.</p>
+    </div>
+
+    <div class="tiers col">
+      <div class="tier">
+        <p class="tier-name">Borrower</p>
+        <p class="tier-price">$0</p>
+        <p class="fine">Anyone with an address in town. Three items at a time, one week each.</p>
+      </div>
+      <div class="tier">
+        <p class="tier-name">Member</p>
+        <p class="tier-price">$40<span>/year</span></p>
+        <p class="fine">A vote for the board, six items at a time, and first call on the workshop nights.</p>
+      </div>
+      <div class="tier">
+        <p class="tier-name">Supporter</p>
+        <p class="tier-price">$150<span>/year</span></p>
+        <p class="fine">The same as a member. It costs more because someone has to cover the borrower who pays nothing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ROADMAP ============ -->
+<section id="roadmap" data-section="roadmap">
+  <div class="wrap stack-lg">
+    <div class="col stack">
+      <p class="eyebrow">Roadmap</p>
+      <p>Written so that it is obvious which parts have not happened. Nothing below is done.</p>
+    </div>
+    <div class="col stack">
+      <div class="phase">
+        <p class="phase-n">01</p>
+        <div class="phase-body">
+          <p class="phase-title">Find out whether anyone wants this</p>
+          <p class="fine">The list on this page is the whole of it. Two hundred names is a signal; twenty is an answer too.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <p class="phase-n">02</p>
+        <div class="phase-body">
+          <p class="phase-title">Incorporate, and publish the filing</p>
+          <p class="fine">A nonprofit with an elected board, and the paperwork posted the day it is accepted.</p>
+        </div>
+      </div>
+      <div class="phase">
+        <p class="phase-n">03</p>
+        <div class="phase-body">
+          <p class="phase-title">One shelf, forty tools, one Saturday a week</p>
+          <p class="fine">Small enough to fail cheaply and visibly, which is the point of starting there.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW TO HELP ============ -->
+<section id="help" data-section="help">
+  <div class="wrap stack-lg">
+    <div class="col stack">
+      <p class="eyebrow">How you can help</p>
+      <p>The useful thing right now is knowing you exist. Everything else follows from that.</p>
+      <div class="asks">
+        <p class="ask"><span class="ask-n">01</span> Put your name on the list</p>
+        <p class="ask"><span class="ask-n">02</span> Tell someone with a garage full of tools</p>
+        <p class="ask"><span class="ask-n">03</span> Say if you would serve on a founding board</p>
+      </div>
+    </div>
+    <div class="col stack">
+      <div class="cta-row">
+        <a class="btn" href="#signup">Add your name &rarr;</a>
+        <!--JOIN-INLINE-->
+      </div>
+      <p class="fine">No donations requested. There is nothing to donate to yet.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SIGNUP MODAL ============
+     Without JavaScript this is a plain :target modal and a plain form post. The
+     script adds focus trapping, the timestamp, and an in-place response. -->
+<div class="modal" id="signup" role="dialog" aria-modal="true" aria-labelledby="signup-title">
+  <a class="modal-scrim" href="#" tabindex="-1" aria-hidden="true"></a>
+  <div class="modal-card">
+    <a class="modal-close" href="#" aria-label="Close">&times;</a>
+    <h3 id="signup-title">Add your name</h3>
+    <form class="form-card" method="post" action="/api/signup">
+      <div class="field">
+        <label for="contact">Email or phone <span aria-hidden="true">*</span></label>
+        <input type="text" id="contact" name="contact" required autocomplete="email" placeholder="you@example.com">
+        <p class="hint">Used to email you about this only.</p>
+      </div>
+
+      <div class="field">
+        <label for="name">Name <span class="hint" style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="name" name="name" autocomplete="name">
+      </div>
+
+      <fieldset class="checks">
+        <legend>I might be able to help with</legend>
+        <label class="check"><input type="checkbox" name="help" value="updates" checked> Just keep me in the loop</label>
+        <label class="check"><input type="checkbox" name="help" value="board"> Serving on a founding board</label>
+        <label class="check"><input type="checkbox" name="help" value="space"> Somewhere to put it</label>
+        <label class="check"><input type="checkbox" name="help" value="tools"> Tools to donate</label>
+        <label class="check"><input type="checkbox" name="help" value="spread"> Spreading the word</label>
+      </fieldset>
+
+      <div class="field">
+        <label for="note">Anything you want to say <span class="hint" style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <textarea id="note" name="note" rows="3"></textarea>
+      </div>
+
+      <!-- Hidden from people, irresistible to bots. -->
+      <div class="hp" aria-hidden="true">
+        <label for="website">Leave this empty</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+      </div>
+      <input type="hidden" name="t" id="t" value="">
+      <input type="hidden" name="lang" value="en">
+
+      <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
+      <div class="cta-row">
+        <button class="btn" type="submit">Sign me up &rarr;</button>
+        <a class="btn btn-quiet" href="#" data-modal-close>Cancel</a>
+      </div>
+      <p class="fine form-provenance">This form posts to this page's own server and writes to a file on disk. <a href="https://github.com/nelsonblaha/campaignlanding">You can read the code that receives it</a>.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="col stack">
+      <p class="eyebrow">About this page</p>
+      <p class="fine">Ridgeline Tool Library does not exist. This is the example that ships with campaignlanding, written out in full because a template with placeholder text tells you nothing about how the thing reads when it is finished.</p>
+
+      <p class="eyebrow">Sources</p>
+      <ol class="refs">
+        <li id="ref-1">Where a citation would go. <cite>A publication</cite>, <a href="https://github.com/nelsonblaha/campaignlanding">a link</a> (a date)</li>
+      </ol>
+
+      <p class="fine">No trackers, no advertising cookies, no analytics, and no third-party form service. That is a property of the software, not a promise on a page: the signup posts to this server and writes to a file, and the code that receives it is public.</p>
+    </div>
+  </div>
+</footer>
+
+<!--JOIN-TAG-->
+
+<script src="/campaignlanding.js"></script>
+</body>
+</html>
