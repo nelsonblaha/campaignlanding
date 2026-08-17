@@ -19,4 +19,4 @@ from .app import create_app
 from .store import SignupStore
 
 __all__ = ["Config", "Language", "create_app", "load_secrets", "SignupStore"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"

@@ -128,8 +128,14 @@ Several arguments in one section, one visible at a time. Standard ARIA:
 </div>
 ```
 
-- `[role="tablist"]` is what the script looks for, so the wrapper's `id` is yours
-  to name.
+- `[role="tablist"]` is what the script looks for, and the wrapper it sits in is
+  found from it, so the wrapper's `id` is yours to name — but **the wrapper needs
+  `class="tabs"`**. Without JavaScript every panel is shown, stacked, and the bar
+  is hidden by `.tabs:not(.js-tabs) .tablist { display: none }`, because a bar
+  that cannot switch anything is worse than no bar. The script adds `.js-tabs` to
+  opt into the collapsed presentation, so nothing is ever hidden from a reader
+  who has no JavaScript — and if that class lands on the wrong element, the bar
+  stays hidden from everyone.
 - Tab **ids must be identical across languages** — that is what `tabs={"cost":
   "tab-cost", "costo": "tab-cost"}` keys on, since the labels differ and the ids
   do not.

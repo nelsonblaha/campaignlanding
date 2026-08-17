@@ -216,12 +216,23 @@
     });
   }
 
+  /* The tab machinery works on two elements: the wrapper, which carries the class
+     the no-JS stylesheet keys on, and the list inside it. Find the list, since that
+     is the element with the standard role, and take the wrapper from it. Getting
+     these two the wrong way round hides the whole tab bar: without .js-tabs on the
+     wrapper, `.tabs:not(.js-tabs) .tablist { display: none }` keeps the bar hidden
+     exactly as it is meant to be for a reader with no JavaScript. */
+  function tabsWrap(within) {
+    var list = (within || document).querySelector('[role="tablist"]');
+    return list && (list.closest('.tabs') || list.parentElement);
+  }
+
   /* ---- reason tabs ----
      The panels are all visible and stacked without JS, and the tablist is hidden
      by CSS because it would do nothing. Adding .js-tabs opts into the collapsed
      presentation, so no content is ever hidden from a reader who has no JS. */
   function initTabs(restoreIndex) {
-    var wrap = document.querySelector('[role="tablist"]');
+    var wrap = tabsWrap();
     if (!wrap) return;
     var tabs = Array.prototype.slice.call(wrap.querySelectorAll('[role="tab"]'));
     var panels = tabs.map(function (t) { return document.getElementById(t.getAttribute('aria-controls')); });
@@ -552,8 +563,8 @@
      size change is visible on the way in and on the way out. Desktop only: on a
      phone the bar is already most of the width and there is nothing to gain. */
   function initTabGrow(signal) {
-    var wrap = document.querySelector('[role="tablist"]');
-    var list = wrap && wrap.querySelector('.tablist');
+    var wrap = tabsWrap();
+    var list = wrap && wrap.querySelector('[role="tablist"]');
     if (!list) return;
     var wide = window.matchMedia('(min-width: 84rem)');
     // How much of the section must remain below the bar for it to stay large.
@@ -668,7 +679,7 @@
      tab bar's own position, not the section's, so an earlier claim here that the
      section's top would trigger it was simply wrong. */
   function restingTopFor(el) {
-    var pin = el.querySelector('[role="tablist"]') || el;
+    var pin = tabsWrap(el) || el;
     var y = 0, n = pin;
     while (n) { y += n.offsetTop; n = n.offsetParent; }
     return y - stickTopPx();
