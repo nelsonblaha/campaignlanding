@@ -164,6 +164,8 @@ Several arguments in one section, one visible at a time. Standard ARIA:
       <div class="hp" aria-hidden="true">
         <label for="website">Leave this empty</label>
         <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+        <label for="company">Leave this empty too</label>
+        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
       </div>
       <input type="hidden" name="t" id="t" value="">
       <input type="hidden" name="lang" value="en">
@@ -183,13 +185,18 @@ Several arguments in one section, one visible at a time. Standard ARIA:
 | `id="signup"` | The modal opens on `:target`, so `href="#signup"` works with JavaScript off. |
 | `action="/api/signup"` | How the script finds the form. An absolute URL ending the same way works; so does `data-signup` on the form. |
 | `name="contact"` | The only required field. Accepts an email address or a phone number; anything else is refused. |
-| `name="website"` in `.hp` | The honeypot. Hidden from people, irresistible to bots, and a filled one is answered with success so a bot learns nothing. |
+| `name="website"` and `name="company"` in `.hp` | The honeypots. Hidden from people, irresistible to bots, and a filled one is answered with success so a bot learns nothing. Two, because one is a pattern worth recognising and two is a coincidence. |
 | `name="t"` | The script stamps it on load. A submission faster than `min_fill_seconds` is refused. |
 | `name="lang"` | Which language the reader was reading. Stored with the signup. |
 | `#form-msg` | Where the in-place response goes. |
 | `[data-modal-close]` | Closes without navigating. |
 
 `help` checkbox values must appear in `help_choices` or they are dropped.
+
+Free text that contains a link — in `note` or `name` — is refused with a message in
+the reader's own language, because almost all form spam exists to deliver a URL and
+almost no genuine signup contains one. Set `reject_links=False` if your campaign is
+one where people would reasonably send you a link.
 
 ## Components
 

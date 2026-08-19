@@ -30,6 +30,12 @@ PACKAGE_STATIC = Path(__file__).parent / "static"
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s.]+\.[^@\s]+$")
 PHONE_RE = re.compile(r"^\+?[0-9][0-9\-.() ]{6,19}$")
+# Anything that reads as a link. Deliberately loose about the scheme, because the
+# spam that motivated it wrote a bare "searchindex.net" with no scheme at all.
+LINK_RE = re.compile(
+    r"(https?://|www\.|\b[a-z0-9-]+\.(com|net|org|io|ru|cn|info|biz|xyz|top|shop|club|online|site)\b)",
+    re.IGNORECASE,
+)
 ASSET_RE = re.compile(r'\b(href|src)="([^"]+\.(?:css|js))"')
 BODY_RE = re.compile(r"<body([^>]*)>", re.IGNORECASE)
 
@@ -382,10 +388,11 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
         lang = pick_lang()
         thanks = config.thanks_path(lang)
 
-        # Honeypot: a field hidden from people and irresistible to bots. It is
-        # answered with success on purpose — a bot that learns it failed tries
-        # something else.
-        if str(form.get("website") or "").strip():
+        # Honeypots: fields hidden from people and irresistible to bots. Two of
+        # them, with names a form-filler expects to find, because one is a pattern
+        # worth recognising and two is a coincidence. Answered with success on
+        # purpose — a bot that learns it failed tries something else.
+        if any(str(form.get(name) or "").strip() for name in ("website", "company")):
             return jsonify({"ok": True}) if wants_json() else redirect(thanks, code=303)
 
         try:
@@ -405,6 +412,15 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
         if not kind:
             return fail("invalid", 400, lang)
 
+        name = str(form.get("name") or "").strip()[: config.max_field]
+        note = str(form.get("note") or "").strip()[: config.max_note]
+        # Refused rather than silently dropped: a person who wrote a link gets told
+        # so and can send the same words without it, while a script gets a 400 it
+        # will not read. Checking after the contact field means a bot cannot use
+        # this to probe which addresses are already valid.
+        if config.reject_links and (LINK_RE.search(note) or LINK_RE.search(name)):
+            return fail("links", 400, lang)
+
         raw_help = form.getlist("help") if hasattr(form, "getlist") else (form.get("help") or [])
         if isinstance(raw_help, str):
             raw_help = [raw_help]
@@ -414,8 +430,8 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
                 "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "kind": kind,
                 "contact": contact,
-                "name": str(form.get("name") or "").strip()[: config.max_field] or None,
-                "note": str(form.get("note") or "").strip()[: config.max_note] or None,
+                "name": name or None,
+                "note": note or None,
                 "help": sorted({h for h in raw_help if h in config.help_choices}),
                 # Which language they were reading. Tells you what the list speaks.
                 "lang": lang.code,

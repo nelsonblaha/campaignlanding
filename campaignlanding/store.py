@@ -12,9 +12,22 @@ can be used and tested without an app.
 from __future__ import annotations
 
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
+
+
+def digest(record: dict) -> str:
+    """A stable handle for one stored signup.
+
+    The file has no id column and should not grow one: it is a log, and a log
+    that hands out identifiers invites something to start referring to them.
+    Hashing the record's own content gives the admin page something to name a row
+    by, and it survives the line moving, which an index does not.
+    """
+    canonical = json.dumps(record, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
 
 
 class SignupStore:
@@ -66,6 +79,67 @@ class SignupStore:
             finally:
                 fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
         return out
+
+    def delete(self, handle: str) -> dict | None:
+        """Remove one signup by its digest. Returns the record, or None.
+
+        The removed row is written to deleted.jsonl first, and only then dropped
+        from the list. Deleting is a moderation action, not a shredder: spam is
+        the ordinary case, and a mis-click on a real person should cost a `mv`
+        rather than an apology.
+
+        The rewrite happens through the same descriptor rather than through a
+        temporary file and a rename. A rename swaps the inode, and an append that
+        is at that moment blocked on this lock would wake up holding the old one
+        and write a signup into a file nobody will ever read again.
+        """
+        if not self.file.exists():
+            return None
+        removed = None
+        with open(self.file, "r+", encoding="utf-8") as fh:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            try:
+                kept: list[str] = []
+                for line in fh:
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    try:
+                        record = json.loads(stripped)
+                    except ValueError:
+                        kept.append(stripped)  # unreadable, but not ours to discard
+                        continue
+                    if removed is None and digest(record) == handle:
+                        removed = record
+                        continue
+                    kept.append(stripped)
+                if removed is None:
+                    return None
+                self._archive(removed)
+                fh.seek(0)
+                fh.truncate(0)
+                for line in kept:
+                    fh.write(line + "\n")
+                fh.flush()
+                os.fsync(fh.fileno())
+            finally:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        return removed
+
+    def _archive(self, record: dict) -> None:
+        path = self.data_dir / "deleted.jsonl"
+        with open(path, "a", encoding="utf-8") as fh:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+            try:
+                fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+                fh.flush()
+                os.fsync(fh.fileno())
+            finally:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
 
     def read_seen(self) -> tuple[str, int]:
         try:

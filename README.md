@@ -21,9 +21,14 @@ The page is HTML you write and own. This package is the machinery behind it.
 - **A signup form that posts to you.** No Google Form, no Mailchimp, no embedded
   third party. It writes JSONL to a file on disk you can read with `cat`, with a
   honeypot, a fill-time floor and a per-IP rate limit in front of it.
-- **One password-protected view of that list**, and a count on the public page
-  that turns into an unread-notification badge for you alone. Configure no
-  password and those routes do not exist.
+- **One password-protected view of that list**, with a delete control per row and
+  a count on the public page that turns into an unread-notification badge for you
+  alone. Configure no password and those routes do not exist.
+- **Spam filters that cost a real person nothing**: two honeypots, a fill-time
+  floor, a per-IP rate limit, and a refusal for free text containing a link —
+  almost all form spam exists to deliver a URL, and almost no genuine signup
+  contains one. A row that ticked every "how can you help" box gets flagged in the
+  admin list rather than blocked, because enthusiasm is not proof.
 - **A design system that already handles the hard parts:** a section rail that
   becomes a sticky bar on phones, tabs that survive a language swap, a modal that
   works with JavaScript off, tap-to-copy links, and a dark theme that is the
@@ -104,7 +109,9 @@ is zero, and because "you can read the list with `cat`" is a claim worth being
 able to make.
 
 **Admin.** One password, one signed cookie, one list view: no search, no export,
-no API. The list is the most sensitive thing the box holds. With no secret and no
+no API. Deleting a row moves it to `deleted.jsonl` beside the list rather than
+destroying it, so a mis-click costs a `mv` and spam still leaves a record of what
+arrived. The list is the most sensitive thing the box holds. With no secret and no
 password hash configured — the default — `/login` and `/admin` return 404 and the
 page contains no reference to them, so somebody else's copy of your repo exposes
 nothing.
@@ -131,7 +138,7 @@ well-formed, non-empty, and wrong.
 python -m unittest discover tests
 ```
 
-55 of them, no pytest, no fixtures library. They cover the parts that are easy to
+70 of them, no pytest, no fixtures library. They cover the parts that are easy to
 get subtly wrong: negotiation and the one-way-switch regression, the honeypot
 answering success, the watermark moving only after the list renders, `/api/`
 staying exempt from the canonical redirect because a 301 turns a POST into a GET.

@@ -31,6 +31,7 @@ DEFAULT_STRINGS: dict[str, dict[str, str]] = {
         "rate": "Too many signups from this address. Try again later.",
         "required": "An email address or phone number is required.",
         "invalid": "That doesn't look like an email address or a phone number.",
+        "links": "Please leave links out of that message.",
         "oops_title": "Something went wrong",
         "thanks_title": "You're on the list.",
         "thanks_body": "We'll write when there's something real to report.",
@@ -50,6 +51,7 @@ DEFAULT_STRINGS: dict[str, dict[str, str]] = {
         "rate": "Demasiados registros desde esta dirección. Intenta más tarde.",
         "required": "Hace falta un correo electrónico o un teléfono.",
         "invalid": "Eso no parece un correo electrónico ni un teléfono.",
+        "links": "Por favor deja los enlaces fuera de ese mensaje.",
         "oops_title": "Algo salió mal",
         "thanks_title": "Ya estás en la lista.",
         "thanks_body": "Te escribiremos cuando haya algo real que contar.",
@@ -153,6 +155,11 @@ class Config:
     extra_cors_origins: frozenset[str] = frozenset()
 
     # ---- the form --------------------------------------------------------
+    # Free text that contains a link is refused. Almost all form spam exists to
+    # deliver a URL, and almost no genuine signup contains one, which makes this
+    # the cheapest filter available that costs a real person nothing: they are
+    # told why, in their own language, and can send the same words without it.
+    reject_links: bool = True
     # The values the "how can you help" checkboxes may submit. Anything else is
     # dropped rather than stored, so the file only ever contains values you named.
     help_choices: frozenset[str] = frozenset()

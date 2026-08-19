@@ -16,6 +16,7 @@ from pathlib import Path
 from werkzeug.security import generate_password_hash
 
 from campaignlanding import Config, Language, create_app
+from campaignlanding.store import digest
 
 PAGE = """<!doctype html>
 <html lang="{code}">
@@ -246,6 +247,115 @@ class Signup(Base):
     def test_the_file_is_not_world_readable(self):
         self.post()
         self.assertEqual(self.signups.stat().st_mode & 0o777, 0o600)
+
+
+class Links(Base):
+    """Almost all form spam exists to deliver a URL, and almost no genuine signup
+    contains one. The real spam that motivated this wrote a bare `searchindex.net`
+    with no scheme, so the test that matters is the one without an https://."""
+
+    def test_a_bare_domain_in_the_note_is_refused(self):
+        r = self.post(note="Include this site in Google's index today: searchindex.net")
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(self.records(), [])
+
+    def test_a_scheme_in_the_note_is_refused(self):
+        self.assertEqual(self.post(note="see https://example.com").status_code, 400)
+
+    def test_a_link_in_the_name_is_refused(self):
+        self.assertEqual(self.post(name="cheap-seo.biz").status_code, 400)
+
+    def test_ordinary_words_are_not(self):
+        self.post(note="Good work! This is sacred mischief that I support!", name="Melissa L Wood")
+        self.assertEqual(len(self.records()), 1)
+
+    def test_the_refusal_speaks_the_readers_language(self):
+        r = self.client.post(
+            "/api/signup",
+            data={"contact": "a@b.co", "t": str(time.time() - 30), "note": "x.com", "lang": "es"},
+            headers={"X-Requested-With": "fetch"},
+        )
+        self.assertIn("enlaces", r.get_json()["error"])
+
+    def test_the_filter_can_be_turned_off(self):
+        # Some campaigns genuinely want links. The default is the safe one.
+        self.assertTrue(self.app.config["campaign"].config.reject_links)
+
+
+class Honeypots(Base):
+    def test_either_honeypot_answers_success_and_stores_nothing(self):
+        for field in ("website", "company"):
+            with self.subTest(field=field):
+                self.assertEqual(self.post(**{field: "http://spam.example"}).status_code, 303)
+        self.assertEqual(self.records(), [])
+
+
+class Delete(Base):
+    secrets = True
+
+    def sign_in(self):
+        self.client.post("/login", data={"password": "hunter2"})
+
+    def handles(self):
+        return [digest(r) for r in self.records()]
+
+    def test_a_signed_in_admin_can_remove_a_row(self):
+        self.post(contact="spam@example.com")
+        self.post(contact="real@example.com")
+        self.sign_in()
+        target = self.handles()[0]
+        r = self.client.post("/admin/delete", data={"digest": target})
+        self.assertEqual(r.status_code, 303)
+        remaining = self.records()
+        self.assertEqual([x["contact"] for x in remaining], ["real@example.com"])
+
+    def test_the_removed_row_is_archived_not_destroyed(self):
+        self.post(contact="spam@example.com")
+        self.sign_in()
+        self.client.post("/admin/delete", data={"digest": self.handles()[0]})
+        archive = self.root / "data" / "deleted.jsonl"
+        self.assertIn("spam@example.com", archive.read_text(encoding="utf-8"))
+        self.assertEqual(archive.stat().st_mode & 0o777, 0o600)
+
+    def test_a_stranger_cannot_delete(self):
+        self.post()
+        r = self.client.post("/admin/delete", data={"digest": self.handles()[0]})
+        self.assertEqual(r.status_code, 303)  # sent to the login page
+        self.assertEqual(len(self.records()), 1)
+
+    def test_an_unknown_handle_changes_nothing(self):
+        self.post()
+        self.sign_in()
+        self.client.post("/admin/delete", data={"digest": "0" * 16})
+        self.assertEqual(len(self.records()), 1)
+
+    def test_a_get_cannot_delete(self):
+        """It falls through to the static catch-all and 404s rather than 405ing,
+        which is the same answer for this purpose: following a link never removes
+        anything."""
+        self.post()
+        self.sign_in()
+        handle = self.handles()[0]
+        r = self.client.get(f"/admin/delete?digest={handle}")
+        self.assertIn(r.status_code, (404, 405))
+        self.assertEqual(len(self.records()), 1)
+
+    def test_the_list_offers_a_delete_control_per_row(self):
+        self.post()
+        self.sign_in()
+        page = self.client.get("/admin").get_data(as_text=True)
+        self.assertIn('action="/admin/delete"', page)
+        self.assertIn(self.handles()[0], page)
+
+    def test_a_row_that_ticked_every_box_is_flagged(self):
+        self.post(help=["updates", "board"])
+        self.sign_in()
+        self.assertIn("every box", self.client.get("/admin").get_data(as_text=True))
+
+    def test_an_ordinary_row_is_not_flagged(self):
+        self.post(help=["updates"])
+        self.sign_in()
+        self.assertNotIn("every box", self.client.get("/admin").get_data(as_text=True))
 
 
 class Count(Base):

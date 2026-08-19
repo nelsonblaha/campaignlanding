@@ -19,6 +19,8 @@ from flask import Response, redirect, request, session
 from markupsafe import escape
 from werkzeug.security import check_password_hash
 
+from .store import digest
+
 
 def shell(title: str, site_name: str, inner: str) -> str:
     """The whole admin stylesheet, inline, because it is two screens of CSS that
@@ -65,6 +67,11 @@ tr.new td {{ background:color-mix(in srgb, var(--sun) 12%, transparent); }}
 .tag {{ font-size:.72rem; padding:.1rem .4rem; border:1px solid var(--line);
   border-radius:.25rem; color:var(--dim); }}
 .scroll {{ overflow-x:auto; }}
+td.act {{ width:1%; white-space:nowrap; }}
+td.act button {{ background:none; color:var(--dim); border:1px solid var(--line);
+  font-weight:400; font-size:.8rem; padding:.3rem .6rem; }}
+td.act button:hover {{ color:#E4776A; border-color:#E4776A; }}
+.tag.flag {{ color:#E4776A; border-color:#E4776A; }}
 .empty {{ padding:2rem; text-align:center; color:var(--dim); border:1px dashed var(--line);
   border-radius:.4rem; }}
 </style></head>
@@ -126,6 +133,24 @@ def register(app, rt) -> None:
         session.clear()
         return redirect("/", code=303)
 
+    @app.post("/admin/delete")
+    def admin_delete():
+        """Remove one signup and come back to the list.
+
+        POST only, and only for a signed-in administrator, so a link in an email
+        cannot delete anything by being followed. The record is archived by the
+        store before it leaves the list; this route is a moderation control, and
+        the ordinary thing it removes is spam.
+        """
+        if not rt.admin_enabled():
+            return Response("Not found", status=404, mimetype="text/plain")
+        if not rt.is_admin():
+            return redirect("/login", code=303)
+        removed = rt.store.delete(request.form.get("digest") or "")
+        # Never log the contact itself — container logs are not a place for PII.
+        app.logger.info("signup deleted: %s", "1 row" if removed else "no match")
+        return redirect("/admin", code=303)
+
     @app.get("/admin")
     def admin():
         if not rt.admin_enabled():
@@ -140,9 +165,13 @@ def register(app, rt) -> None:
         fresh_from = len(recs) - st["unseen"]
         rows = []
         for i, r in reversed(list(enumerate(recs))):
-            tags = "".join(
-                f'<span class="tag">{escape(h)}</span>' for h in (r.get("help") or [])
-            )
+            offered = r.get("help") or []
+            tags = "".join(f'<span class="tag">{escape(h)}</span>' for h in offered)
+            # Every box ticked is a shape people almost never produce and form
+            # spam almost always does. Marked rather than blocked: enthusiasm is
+            # not proof, and the judgement belongs to whoever reads the list.
+            if len(cfg.help_choices) > 1 and len(offered) >= len(cfg.help_choices):
+                tags += '<span class="tag flag">every box</span>'
             rows.append(
                 "<tr{cls}>"
                 '<td class="ts">{ts}</td>'
@@ -151,6 +180,12 @@ def register(app, rt) -> None:
                 '<td><div class="tags">{tags}</div></td>'
                 "<td>{note}</td>"
                 '<td class="ts">{lang}</td>'
+                '<td class="act">'
+                '<form method="post" action="/admin/delete"'
+                " onsubmit=\"return confirm('Delete this signup?"
+                " A copy is kept in deleted.jsonl.')\">"
+                '<input type="hidden" name="digest" value="{handle}">'
+                '<button type="submit">Delete</button></form></td>'
                 "</tr>".format(
                     cls=' class="new"' if i >= fresh_from else "",
                     ts=escape(str(r.get("ts") or "")).replace("T", " ").replace("Z", ""),
@@ -159,13 +194,14 @@ def register(app, rt) -> None:
                     tags=tags or '<span class="dim">&mdash;</span>',
                     note=escape(str(r.get("note") or "")) or '<span class="dim">&mdash;</span>',
                     lang=escape(str(r.get("lang") or "")),
+                    handle=digest(r),
                 )
             )
 
         table = (
             '<div class="scroll"><table><thead><tr>'
             "<th>When (UTC)</th><th>Contact</th><th>Name</th><th>Offered to help</th>"
-            "<th>Note</th><th>Filled in</th>"
+            "<th>Note</th><th>Filled in</th><th></th>"
             "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
             if rows
             else '<p class="empty">No signups yet.</p>'
@@ -193,7 +229,8 @@ count alone.</p>"""
 {table}
 {offset_note}
 <p class="dim">Stored at {escape(str(rt.store.file))} on the host, mode 0600, and readable
-over SSH. This page is the only route that returns any of it.</p>
+over SSH. This page is the only route that returns any of it. Deleting moves a row to
+deleted.jsonl beside it rather than destroying it, so a mis-click costs a <code>mv</code>.</p>
 <p class="dim"><a href="/">&larr; Back to the site</a></p>"""
 
         # The watermark moves only once the list has actually been rendered.
