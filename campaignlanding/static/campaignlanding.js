@@ -172,8 +172,10 @@
     var form = document.querySelector('form[data-signup], form[action$="/api/signup"]');
     if (!form) return;
     var msg = document.getElementById('form-msg');
-    var stamp = document.getElementById('t');
-    if (stamp) stamp.value = String(Date.now() / 1000);
+    // The stamp in the form is signed by the server and proves the page was
+    // fetched. It used to be written here from the clock on this machine, which
+    // made the check depend on this file running at all — and a script that never
+    // loaded the page could just leave the field out.
 
     function say(text, kind) {
       msg.textContent = text;

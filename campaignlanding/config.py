@@ -32,6 +32,7 @@ DEFAULT_STRINGS: dict[str, dict[str, str]] = {
         "required": "An email address or phone number is required.",
         "invalid": "That doesn't look like an email address or a phone number.",
         "links": "Please leave links out of that message.",
+        "stale": "That form had been open a while. Reload the page and try again.",
         "oops_title": "Something went wrong",
         "thanks_title": "You're on the list.",
         "thanks_body": "We'll write when there's something real to report.",
@@ -52,6 +53,7 @@ DEFAULT_STRINGS: dict[str, dict[str, str]] = {
         "required": "Hace falta un correo electrónico o un teléfono.",
         "invalid": "Eso no parece un correo electrónico ni un teléfono.",
         "links": "Por favor deja los enlaces fuera de ese mensaje.",
+        "stale": "Ese formulario llevaba tiempo abierto. Recarga la página e inténtalo de nuevo.",
         "oops_title": "Algo salió mal",
         "thanks_title": "Ya estás en la lista.",
         "thanks_body": "Te escribiremos cuando haya algo real que contar.",
@@ -160,6 +162,11 @@ class Config:
     # the cheapest filter available that costs a real person nothing: they are
     # told why, in their own language, and can send the same words without it.
     reject_links: bool = True
+    # How long a rendered form stays valid. The stamp that proves a page was
+    # actually fetched is signed by the server and carries its own issue time, so
+    # this is the window in which it may be submitted. Long, because a reader who
+    # opens the page and comes back after lunch is not a bot.
+    form_max_age: int = 86400
     # The values the "how can you help" checkboxes may submit. Anything else is
     # dropped rather than stored, so the file only ever contains values you named.
     help_choices: frozenset[str] = frozenset()

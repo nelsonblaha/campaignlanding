@@ -24,8 +24,11 @@ The page is HTML you write and own. This package is the machinery behind it.
 - **One password-protected view of that list**, with a delete control per row and
   a count on the public page that turns into an unread-notification badge for you
   alone. Configure no password and those routes do not exist.
-- **Spam filters that cost a real person nothing**: two honeypots, a fill-time
-  floor, a per-IP rate limit, and a refusal for free text containing a link —
+- **Spam filters that cost a real person nothing**: two honeypots, a per-IP rate
+  limit, a signed stamp the server puts in the form so a script that never loaded
+  the page cannot post at all — which works with JavaScript switched off, because
+  it is in the HTML rather than written by a script — and a refusal for free text
+  containing a link —
   almost all form spam exists to deliver a URL, and almost no genuine signup
   contains one. A row that ticked every "how can you help" box gets flagged in the
   admin list rather than blocked, because enthusiasm is not proof.
@@ -138,7 +141,7 @@ well-formed, non-empty, and wrong.
 python -m unittest discover tests
 ```
 
-70 of them, no pytest, no fixtures library. They cover the parts that are easy to
+79 of them, no pytest, no fixtures library. They cover the parts that are easy to
 get subtly wrong: negotiation and the one-way-switch regression, the honeypot
 answering success, the watermark moving only after the list renders, `/api/`
 staying exempt from the canonical redirect because a 301 turns a POST into a GET.

@@ -26,7 +26,8 @@ PAGE = """<!doctype html>
 <section id="why" data-section="why"><div role="tablist">
   <button class="tab" role="tab" id="tab-one" aria-selected="true">One</button>
 </div></section>
-<form method="post" action="/api/signup"><input name="contact"></form>
+<form method="post" action="/api/signup"><input name="contact">
+<input type="hidden" name="t" value="<!--FORM-TOKEN-->"></form>
 <!--JOIN-INLINE-->
 <!--JOIN-TAG-->
 <script src="{up}campaignlanding.js"></script>
@@ -38,6 +39,8 @@ class Base(unittest.TestCase):
     founder_offset = 0
     show_count_above = 0
     secrets = False
+    min_fill_seconds = 0.0
+    form_max_age = 86400
 
     def setUp(self):
         self.root = Path(tempfile.mkdtemp())
@@ -64,6 +67,8 @@ class Base(unittest.TestCase):
             sections={"why": "why", "por-que": "why"},
             tabs={"one": "tab-one", "uno": "tab-one"},
             tabs_section="why",
+            min_fill_seconds=self.min_fill_seconds,
+            form_max_age=self.form_max_age,
             founder_offset=self.founder_offset,
             show_count_above=self.show_count_above,
             secret_key="test-key" if self.secrets else "",
@@ -77,8 +82,14 @@ class Base(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.root, ignore_errors=True)
 
+    def stamp(self, path="/"):
+        """The signed stamp out of a freshly rendered page — which is the only
+        place to get one, on purpose."""
+        html = self.client.get(path).get_data(as_text=True)
+        return html.split('name="t" value="')[1].split('"')[0]
+
     def post(self, **fields):
-        body = {"contact": "someone@example.com", "t": str(time.time() - 30)}
+        body = {"contact": "someone@example.com", "t": self.stamp()}
         body.update(fields)
         return self.client.post("/api/signup", data=body)
 
@@ -204,8 +215,9 @@ class Signup(Base):
     def test_an_empty_contact_is_refused(self):
         self.assertEqual(self.post(contact="").status_code, 400)
 
-    def test_faster_than_a_person_can_type_is_refused(self):
-        self.assertEqual(self.post(t=str(time.time())).status_code, 429)
+    def test_a_stamp_this_side_of_the_wire_is_not_accepted(self):
+        """The client's own clock reading, which is what the old field carried."""
+        self.assertEqual(self.post(t=str(time.time())).status_code, 400)
         self.assertEqual(self.records(), [])
 
     def test_the_honeypot_answers_success_and_stores_nothing(self):
@@ -225,7 +237,7 @@ class Signup(Base):
     def test_the_referrer_decides_when_the_field_is_absent(self):
         self.client.post(
             "/api/signup",
-            data={"contact": "a@b.co", "t": str(time.time() - 30)},
+            data={"contact": "a@b.co", "t": self.stamp()},
             headers={"Referer": "https://example.org/es/"},
         )
         self.assertEqual(self.records()[0]["lang"], "es")
@@ -233,7 +245,7 @@ class Signup(Base):
     def test_fetch_gets_json_rather_than_a_redirect(self):
         r = self.client.post(
             "/api/signup",
-            data={"contact": "a@b.co", "t": str(time.time() - 30)},
+            data={"contact": "a@b.co", "t": self.stamp()},
             headers={"X-Requested-With": "fetch"},
         )
         self.assertEqual(r.get_json(), {"ok": True})
@@ -247,6 +259,87 @@ class Signup(Base):
     def test_the_file_is_not_world_readable(self):
         self.post()
         self.assertEqual(self.signups.stat().st_mode & 0o777, 0o600)
+
+
+class Stamp(Base):
+    """The form carries proof it was rendered. This is what makes the fill-time
+    check work with JavaScript switched off, and what stops a script that never
+    loaded the page from posting at all."""
+
+    def test_the_page_ships_a_stamp(self):
+        self.assertTrue(self.stamp())
+
+    def test_every_language_ships_one(self):
+        """It is a signed timestamp rather than a per-visitor nonce, so two pages
+        rendered in the same second carry the same stamp. Nothing is bound to a
+        session; what it proves is that a page was fetched at all."""
+        for path in ("/", "/es/", "/en/"):
+            self.assertTrue(self.stamp(path), path)
+
+    def test_a_submission_with_no_stamp_is_refused(self):
+        r = self.client.post("/api/signup", data={"contact": "a@b.co"})
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(self.records(), [])
+
+    def test_a_forged_stamp_is_refused(self):
+        self.assertEqual(self.post(t="f.aoX8dA.notarealsignature").status_code, 400)
+
+    def test_a_stamp_from_another_instance_is_refused(self):
+        other = create_app(self.app.config["campaign"].config, read_env=False)
+        other.secret_key = "a different key"
+        stolen = other.test_client().get("/").get_data(as_text=True)
+        stolen = stolen.split('name="t" value="')[1].split('"')[0]
+        self.assertEqual(self.post(t=stolen).status_code, 400)
+
+    def test_no_javascript_is_required_to_get_one(self):
+        """The whole point: the stamp is in the HTML the server sent, so a reader
+        with scripting off submits exactly like anyone else."""
+        html = self.client.get("/").get_data(as_text=True)
+        self.assertIn('name="t" value="', html)
+        self.assertNotIn("<!--FORM-TOKEN-->", html)
+        self.assertEqual(self.post().status_code, 303)
+
+
+class StampWindows(Base):
+    min_fill_seconds = 2.0
+
+    def test_faster_than_a_person_can_type_is_refused(self):
+        self.assertEqual(self.post().status_code, 429)
+        self.assertEqual(self.records(), [])
+
+
+class StampExpiry(Base):
+    min_fill_seconds = 0.0
+    form_max_age = 1
+
+    def test_a_stamp_older_than_the_window_is_refused(self):
+        stamp = self.stamp()
+        time.sleep(2.2)  # past the window, and past its one-second resolution
+        r = self.client.post("/api/signup", data={"contact": "a@b.co", "t": stamp})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("Reload", r.get_data(as_text=True))
+
+
+class NoMarker(Base):
+    """A campaign whose markup predates the stamp keeps working, because refusing
+    every signup on an upgrade would be a worse failure than the one it fixes."""
+
+    def setUp(self):
+        super().setUp()
+        page = self.root / "site" / "index.html"
+        page.write_text(page.read_text(encoding="utf-8").replace(
+            '<input type="hidden" name="t" value="<!--FORM-TOKEN-->">', ""), encoding="utf-8")
+        config = self.app.config["campaign"].config
+        self.app = create_app(config, read_env=False)
+        self.app.config["SESSION_COOKIE_SECURE"] = False
+        self.client = self.app.test_client()
+
+    def test_the_old_client_supplied_stamp_still_works(self):
+        r = self.client.post(
+            "/api/signup", data={"contact": "a@b.co", "t": str(time.time() - 30)}
+        )
+        self.assertEqual(r.status_code, 303)
+        self.assertEqual(len(self.records()), 1)
 
 
 class Links(Base):
@@ -272,7 +365,7 @@ class Links(Base):
     def test_the_refusal_speaks_the_readers_language(self):
         r = self.client.post(
             "/api/signup",
-            data={"contact": "a@b.co", "t": str(time.time() - 30), "note": "x.com", "lang": "es"},
+            data={"contact": "a@b.co", "t": self.stamp(), "note": "x.com", "lang": "es"},
             headers={"X-Requested-With": "fetch"},
         )
         self.assertIn("enlaces", r.get_json()["error"])

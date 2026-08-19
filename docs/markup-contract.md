@@ -167,7 +167,7 @@ Several arguments in one section, one visible at a time. Standard ARIA:
         <label for="company">Leave this empty too</label>
         <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
       </div>
-      <input type="hidden" name="t" id="t" value="">
+      <input type="hidden" name="t" value="<!--FORM-TOKEN-->">
       <input type="hidden" name="lang" value="en">
 
       <p class="form-msg" id="form-msg" role="status" aria-live="polite"></p>
@@ -186,7 +186,7 @@ Several arguments in one section, one visible at a time. Standard ARIA:
 | `action="/api/signup"` | How the script finds the form. An absolute URL ending the same way works; so does `data-signup` on the form. |
 | `name="contact"` | The only required field. Accepts an email address or a phone number; anything else is refused. |
 | `name="website"` and `name="company"` in `.hp` | The honeypots. Hidden from people, irresistible to bots, and a filled one is answered with success so a bot learns nothing. Two, because one is a pattern worth recognising and two is a coincidence. |
-| `name="t"` | The script stamps it on load. A submission faster than `min_fill_seconds` is refused. |
+| `name="t"` with `<!--FORM-TOKEN-->` | Replaced at render time with a stamp the server signed. It proves the page was actually fetched — with JavaScript or without it — and a submission faster than `min_fill_seconds`, older than `form_max_age`, or carrying no stamp at all is refused. Leave the marker out and the engine warns at startup and falls back to trusting the client, which a script that never loads the page can simply omit. |
 | `name="lang"` | Which language the reader was reading. Stored with the signup. |
 | `#form-msg` | Where the in-place response goes. |
 | `[data-modal-close]` | Closes without navigating. |

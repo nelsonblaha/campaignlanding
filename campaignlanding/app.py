@@ -17,10 +17,11 @@ import os
 import re
 import time
 from collections import deque
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from flask import Flask, Response, jsonify, redirect, request, send_from_directory, session
+from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 
 from . import admin as admin_module
 from .config import Config, Language, load_secrets
@@ -38,6 +39,9 @@ LINK_RE = re.compile(
 )
 ASSET_RE = re.compile(r'\b(href|src)="([^"]+\.(?:css|js))"')
 BODY_RE = re.compile(r"<body([^>]*)>", re.IGNORECASE)
+# Written literally into the form's hidden field by the page author; replaced with
+# a signed stamp at render time.
+FORM_TOKEN_MARKER = "<!--FORM-TOKEN-->"
 
 # What the reader's choice of language is written to. Its single job is to mean
 # "stop guessing for me", in either direction.
@@ -149,6 +153,47 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
     )
 
     # ------------------------------------------------------------------
+    # Proof the page was actually fetched
+    #
+    # The form carries a stamp the server signed when it rendered the page. It
+    # replaces a timestamp that JavaScript used to write into the same field,
+    # which had two problems: it made the check depend on JavaScript, and a script
+    # that never loaded the page simply omitted the field, which read as "filled
+    # in long ago" and sailed through.
+    #
+    # Signed and server-issued, it is the opposite: a submission cannot carry one
+    # without having asked for the page, JavaScript or not, and the age it
+    # measures is the server's own clock rather than the client's word for it.
+    #
+    # A campaign whose markup predates this keeps the old behaviour, because
+    # silently refusing every signup on an upgrade would be a worse failure than
+    # the one this fixes. The warning below is how you find out.
+    # ------------------------------------------------------------------
+
+    signer = TimestampSigner(app.secret_key, salt="campaignlanding-form")
+    token_in_markup = all(
+        FORM_TOKEN_MARKER in (config.site_dir / lang.page).read_text(encoding="utf-8")
+        for lang in config.languages
+        if (config.site_dir / lang.page).exists()
+    )
+    if not token_in_markup:
+        app.logger.warning(
+            "no %s in the signup form: falling back to the client-supplied stamp, "
+            "which a script that never loads the page can omit entirely",
+            FORM_TOKEN_MARKER,
+        )
+
+    def form_age(raw: str) -> float | None:
+        """Seconds since this form was rendered, or None if it cannot be trusted."""
+        if not raw:
+            return None
+        try:
+            _, issued = signer.unsign(raw, max_age=config.form_max_age, return_timestamp=True)
+        except (BadSignature, SignatureExpired):
+            return None
+        return (datetime.now(timezone.utc) - issued).total_seconds()
+
+    # ------------------------------------------------------------------
     # Language
     #
     # "/" adapts to Accept-Language exactly once: if the visitor has never chosen
@@ -240,6 +285,7 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
         # stale count.
         tag, inline = join_markup(lang)
         html = html.replace("<!--JOIN-TAG-->", tag).replace("<!--JOIN-INLINE-->", inline)
+        html = html.replace(FORM_TOKEN_MARKER, signer.sign(b"f").decode("ascii"))
         html = html.replace("</body>", page_config(lang) + "\n</body>", 1)
         return Response(
             html,
@@ -395,10 +441,19 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
         if any(str(form.get(name) or "").strip() for name in ("website", "company")):
             return jsonify({"ok": True}) if wants_json() else redirect(thanks, code=303)
 
-        try:
-            elapsed = time.time() - float(form.get("t") or 0)
-        except (TypeError, ValueError):
-            elapsed = 0.0
+        raw_stamp = str(form.get("t") or "")
+        if token_in_markup:
+            elapsed = form_age(raw_stamp)
+            if elapsed is None:
+                # No stamp, a forged one, or one older than the window. The first
+                # is the interesting case: it means this arrived without the page
+                # ever being fetched.
+                return fail("stale", 400, lang)
+        else:
+            try:
+                elapsed = time.time() - float(raw_stamp or 0)
+            except (TypeError, ValueError):
+                elapsed = 0.0
         if elapsed < config.min_fill_seconds:
             return fail("too_fast", 429, lang)
 
