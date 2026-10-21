@@ -530,7 +530,7 @@ section > .wrap { padding-top: 4.5rem; padding-bottom: 4.5rem; }
 
 .field { display: flex; flex-direction: column; gap: 0.4rem; }
 
-.field label, .checks legend {
+.field label, .checks legend, .repeat legend {
   font-family: var(--font-display);
   font-size: 0.7rem;
   text-transform: uppercase;
@@ -555,6 +555,26 @@ section > .wrap { padding-top: 4.5rem; padding-bottom: 4.5rem; }
 .checks legend { padding: 0; margin-bottom: 0.15rem; }
 .check { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.93rem; color: var(--ink-2); cursor: pointer; }
 .check input { margin-top: 0.35rem; accent-color: var(--accent); flex: none; }
+
+/* Rows a reader can add to, one per thing they have several of: each a boxed
+   name with its own checkboxes, and a button that adds another. */
+.repeat { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.repeat legend { padding: 0; margin-bottom: 0.15rem; }
+.repeat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid var(--rule);
+  background: var(--sunken);
+}
+.repeat-row .field input[type="text"] { background: var(--surface); }
+.repeat-row [data-repeat-remove] { align-self: flex-end; }
+[data-repeat-add] { align-self: flex-start; }
+/* Both are buttons, and a .btn sets its own display, which beats the hidden
+   attribute's. Without this the add button shows with JavaScript off, where it
+   can do nothing, and the remove button shows on rows that can't be removed. */
+[data-repeat-add][hidden], [data-repeat-remove][hidden] { display: none; }
 
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 

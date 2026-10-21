@@ -14,9 +14,9 @@ that writes to a file you can read over SSH, addresses for parts of the page, an
 one password-protected view of who has signed up.
 """
 
-from .config import Config, Language, load_secrets
+from .config import Config, Language, Repeat, load_secrets
 from .app import create_app
 from .store import SignupStore
 
-__all__ = ["Config", "Language", "create_app", "load_secrets", "SignupStore"]
+__all__ = ["Config", "Language", "Repeat", "create_app", "load_secrets", "SignupStore"]
 __version__ = "0.3.0"

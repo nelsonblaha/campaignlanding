@@ -21,6 +21,9 @@ The page is HTML you write and own. This package is the machinery behind it.
 - **A signup form that posts to you.** No Google Form, no Mailchimp, no embedded
   third party. It writes JSONL to a file on disk you can read with `cat`, with a
   honeypot, a fill-time floor and a per-IP rate limit in front of it.
+- **Rows a reader can add to**, for things a signup has several of: "add another" copies a
+  row with its own checkboxes, renumbered so the server never misses one, and the rows
+  written in the markup still work with JavaScript off.
 - **One password-protected view of that list**, with a delete control per row and
   a count on the public page that turns into an unread-notification badge for you
   alone. Configure no password and those routes do not exist.
@@ -146,7 +149,7 @@ well-formed, non-empty, and wrong.
 python -m unittest discover tests
 ```
 
-81 of them, no pytest, no fixtures library. They cover the parts that are easy to
+93 of them, no pytest, no fixtures library. They cover the parts that are easy to
 get subtly wrong: negotiation and the one-way-switch regression, the honeypot
 answering success, the watermark moving only after the list renders, `/api/`
 staying exempt from the canonical redirect because a 301 turns a POST into a GET.

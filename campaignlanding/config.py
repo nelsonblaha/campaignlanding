@@ -12,6 +12,7 @@ without starting anything.
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -128,6 +129,29 @@ class Language:
         return {k: self.text(k) for k in CLIENT_KEYS}
 
 
+# What the engine itself reads from the form or writes to a stored signup. A
+# repeat group may not use any of these as its key.
+RESERVED_FIELDS = frozenset(
+    {"ts", "kind", "contact", "name", "note", "help", "lang", "t", "website", "company"}
+)
+
+
+@dataclass(frozen=True)
+class Repeat:
+    """Rows a reader can add to the form: a name, and its own checkboxes.
+
+    For things a signup can have more than one of, such as a reader's AI
+    companions. Row n is `<key>-<n>-name` and `<key>-<n>-help` in the markup, and
+    the stored signup gets `<key>: [{"name": ..., "help": [...]}, ...]`. A row with
+    no name is dropped; a ticked box is kept only if it is in `choices`; rows past
+    `max_rows` are ignored. See docs/markup-contract.md for the markup.
+    """
+
+    label: str  # the column heading in /admin
+    choices: frozenset[str] = frozenset()
+    max_rows: int = 10
+
+
 @dataclass(frozen=True)
 class Config:
     """Everything the engine needs to know about one campaign.
@@ -170,6 +194,9 @@ class Config:
     # The values the "how can you help" checkboxes may submit. Anything else is
     # dropped rather than stored, so the file only ever contains values you named.
     help_choices: frozenset[str] = frozenset()
+    # Groups of rows a reader can add to, keyed by the prefix their fields use in
+    # the markup. Each is a Repeat. Empty by default: no group, no fields read.
+    repeats: Mapping[str, Repeat] = field(default_factory=dict)
 
     # ---- addresses for parts of the page ---------------------------------
     # slug -> the data-section it scrolls to. "/why" serves the page already at
@@ -241,6 +268,20 @@ class Config:
                     f"tab slug /{slug} needs tabs_section, the data-section the tabs live in"
                 )
             del section
+        for key, rep in self.repeats.items():
+            # A group's rows land in the stored signup under its key, beside the
+            # fields the engine writes itself, so a key must not be able to take one
+            # of those over; and it is spliced into field names in the markup, so it
+            # must be something that can be.
+            if not re.fullmatch(r"[a-z][a-z0-9_]*", key) or key in RESERVED_FIELDS:
+                raise ValueError(
+                    f"repeat group {key!r} needs a lowercase identifier that is not one "
+                    f"of the form's own fields ({', '.join(sorted(RESERVED_FIELDS))})"
+                )
+            if not rep.label:
+                raise ValueError(f"repeat group {key!r} needs a label for /admin")
+            if not 1 <= rep.max_rows <= 50:
+                raise ValueError(f"repeat group {key!r}: max_rows must be 1 to 50")
         if not self.session_cookie_name:
             safe = "".join(c if c.isalnum() else "_" for c in self.name.lower())
             object.__setattr__(self, "session_cookie_name", f"{safe}_admin")

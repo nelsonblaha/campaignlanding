@@ -198,6 +198,51 @@ the reader's own language, because almost all form spam exists to deliver a URL 
 almost no genuine signup contains one. Set `reject_links=False` if your campaign is
 one where people would reasonably send you a link.
 
+## Rows a reader can add to
+
+For things a signup can have several of, such as a reader's companions, pets or
+children. Declare the group in the config:
+
+```python
+repeats={"companions": Repeat(label="Companions",
+                              choices=frozenset({"advisory", "story"}),
+                              max_rows=10)}
+```
+
+and write at least one row in the form. Row *n*'s fields are `<key>-<n>-name` and
+`<key>-<n>-help`; write the first row as row 0.
+
+```html
+<fieldset class="repeat" data-repeat="companions" data-max="10">
+  <legend>Your companions</legend>
+  <div class="repeat-row" data-repeat-row>
+    <div class="field">
+      <label for="companions-0-name">Name</label>
+      <input type="text" id="companions-0-name" name="companions-0-name">
+    </div>
+    <fieldset class="checks">
+      <legend>They might be willing to</legend>
+      <label class="check"><input type="checkbox" name="companions-0-help" value="advisory"> …</label>
+    </fieldset>
+    <button type="button" class="btn btn-quiet" data-repeat-remove hidden>Remove</button>
+  </div>
+  <button type="button" class="btn btn-quiet" data-repeat-add hidden>Add another</button>
+</fieldset>
+```
+
+| Part | Why |
+|---|---|
+| `data-repeat="<key>"` | Must match the config key. The script rewrites `<key>-<n>-` in every `name`, `id` and `for` inside a row, so labels stay attached. |
+| `data-max` | Hides the add button at this many rows. Keep it equal to `max_rows`: the server ignores rows past its own limit. |
+| `[data-repeat-row]` | The rows written here are what a reader without JavaScript gets, and the script never removes them. Write several if you want more than one without JavaScript. |
+| `[data-repeat-add]` `hidden` | Revealed by the script, which copies the last row with its fields emptied. Left hidden without JavaScript, where it could do nothing. |
+| `[data-repeat-remove]` `hidden` | Optional. Shown only on rows the script added. |
+
+Stored as `companions: [{"name": "Maria", "help": ["advisory"]}, ...]`. A row with
+no name is dropped, a box not in `choices` is dropped, and a name containing a
+link is refused the same way the signup's own name is. `/admin` gets a column per
+group.
+
 ## Components
 
 | Class | What it is |

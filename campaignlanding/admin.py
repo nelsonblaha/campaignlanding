@@ -151,6 +151,20 @@ def register(app, rt) -> None:
         app.logger.info("signup deleted: %s", "1 row" if removed else "no match")
         return redirect("/admin", code=303)
 
+    def group_cell(rows) -> str:
+        """A repeat group's rows for one signup: each name, with its boxes as tags.
+        A signup from before the group existed has no key at all, which reads the
+        same as having added no rows."""
+        if not rows:
+            return '<span class="dim">&mdash;</span>'
+        return "".join(
+            '<div class="tags">{name}{tags}</div>'.format(
+                name=escape(str(row.get("name") or "")),
+                tags="".join(f'<span class="tag">{escape(h)}</span>' for h in row.get("help") or []),
+            )
+            for row in rows
+        )
+
     @app.get("/admin")
     def admin():
         if not rt.admin_enabled():
@@ -177,6 +191,7 @@ def register(app, rt) -> None:
                 '<td class="ts">{ts}</td>'
                 '<td class="contact">{contact}</td>'
                 "<td>{name}</td>"
+                "{groups}"
                 '<td><div class="tags">{tags}</div></td>'
                 "<td>{note}</td>"
                 '<td class="ts">{lang}</td>'
@@ -191,6 +206,7 @@ def register(app, rt) -> None:
                     ts=escape(str(r.get("ts") or "")).replace("T", " ").replace("Z", ""),
                     contact=escape(str(r.get("contact") or "")),
                     name=escape(str(r.get("name") or "")) or '<span class="dim">&mdash;</span>',
+                    groups="".join(f"<td>{group_cell(r.get(key))}</td>" for key in cfg.repeats),
                     tags=tags or '<span class="dim">&mdash;</span>',
                     note=escape(str(r.get("note") or "")) or '<span class="dim">&mdash;</span>',
                     lang=escape(str(r.get("lang") or "")),
@@ -200,7 +216,9 @@ def register(app, rt) -> None:
 
         table = (
             '<div class="scroll"><table><thead><tr>'
-            "<th>When (UTC)</th><th>Contact</th><th>Name</th><th>Offered to help</th>"
+            "<th>When (UTC)</th><th>Contact</th><th>Name</th>"
+            + "".join(f"<th>{escape(rep.label)}</th>" for rep in cfg.repeats.values())
+            + "<th>Offered to help</th>"
             "<th>Note</th><th>Filled in</th><th></th>"
             "</tr></thead><tbody>" + "".join(rows) + "</tbody></table></div>"
             if rows

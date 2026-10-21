@@ -182,6 +182,8 @@
       msg.className = 'form-msg show ' + kind;
     }
 
+    initRepeats(form);
+
     form.addEventListener('submit', function (e) {
       if (!window.fetch) return;
       e.preventDefault();
@@ -215,6 +217,84 @@
           btn.disabled = false;
           btn.textContent = original;
         });
+    });
+  }
+
+  /* ---- repeatable rows: "add another" for things a signup has several of ----
+     Each [data-repeat] group holds the rows written in the markup
+     ([data-repeat-row]) and a hidden [data-repeat-add] button, which this reveals.
+     The button copies the last row with its fields emptied. Every change
+     renumbers the rows, so the server, which reads <key>-0- upward to its limit,
+     sees them all however they were added and removed. With JavaScript off the
+     button stays hidden and the rows in the markup are the whole form, which
+     still submits. */
+  function initRepeats(form) {
+    form.querySelectorAll('[data-repeat]').forEach(function (group) {
+      var key = group.getAttribute('data-repeat');
+      var max = parseInt(group.getAttribute('data-max'), 10) || 10;
+      var add = group.querySelector('[data-repeat-add]');
+      var authored = group.querySelectorAll('[data-repeat-row]').length;
+      if (!add || !authored) return;
+      var prefix = new RegExp('^' + key + '-\\d+-');
+
+      function rows() {
+        return Array.prototype.slice.call(group.querySelectorAll('[data-repeat-row]'));
+      }
+
+      function renumber() {
+        rows().forEach(function (row, i) {
+          row.querySelectorAll('[name], [id], [for]').forEach(function (el) {
+            ['name', 'id', 'for'].forEach(function (attr) {
+              var v = el.getAttribute(attr);
+              if (v && prefix.test(v)) el.setAttribute(attr, v.replace(prefix, key + '-' + i + '-'));
+            });
+          });
+          // Only rows this script added can be removed: the ones in the markup are
+          // what a reader without JavaScript gets, so they are the floor.
+          var remove = row.querySelector('[data-repeat-remove]');
+          if (remove) remove.hidden = i < authored;
+        });
+        add.hidden = rows().length >= max;
+      }
+
+      add.addEventListener('click', function () {
+        var all = rows();
+        // The button is hidden at the limit, but hidden only stops a person: a
+        // script, or a second click already queued, can still fire it.
+        if (all.length >= max) return;
+        var last = all[all.length - 1];
+        var row = last.cloneNode(true);
+        // A clone carries the current state, not the markup's: put each field back
+        // to how the page was written.
+        row.querySelectorAll('input, textarea, select').forEach(function (el) {
+          if (el.type === 'checkbox' || el.type === 'radio') el.checked = el.defaultChecked;
+          else if (el.type !== 'hidden') el.value = '';
+        });
+        last.parentNode.insertBefore(row, last.nextSibling);
+        renumber();
+        var first = row.querySelector('input[type="text"], input:not([type]), textarea');
+        if (first) first.focus();
+      });
+
+      group.addEventListener('click', function (e) {
+        var remove = e.target.closest('[data-repeat-remove]');
+        if (!remove) return;
+        var row = remove.closest('[data-repeat-row]');
+        if (rows().indexOf(row) < authored) return;
+        row.remove();
+        renumber();
+        add.focus();
+      });
+
+      // A successful signup resets the form; take the rows back to where they began.
+      form.addEventListener('reset', function () {
+        setTimeout(function () {
+          rows().slice(authored).forEach(function (r) { r.remove(); });
+          renumber();
+        }, 0);
+      });
+
+      renumber();
     });
   }
 

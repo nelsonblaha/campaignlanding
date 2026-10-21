@@ -16,7 +16,7 @@ from pathlib import Path
 
 from werkzeug.security import generate_password_hash
 
-from campaignlanding import Config, Language, create_app
+from campaignlanding import Config, Language, Repeat, create_app
 from campaignlanding.store import digest
 
 PAGE = """<!doctype html>
@@ -48,6 +48,7 @@ class Base(unittest.TestCase):
     secrets = False
     min_fill_seconds = 0.0
     form_max_age = 86400
+    repeats: dict = {}
 
     def setUp(self):
         self.root = Path(tempfile.mkdtemp())
@@ -81,6 +82,7 @@ class Base(unittest.TestCase):
             form_max_age=self.form_max_age,
             founder_offset=self.founder_offset,
             show_count_above=self.show_count_above,
+            repeats=self.repeats,
             secret_key="test-key" if self.secrets else "",
             admin_password_hash=generate_password_hash("hunter2") if self.secrets else "",
         )
@@ -518,6 +520,98 @@ class NoAdmin(Base):
     def test_the_page_carries_no_trace_of_them(self):
         self.assertNotIn("/admin", self.client.get("/").get_data(as_text=True))
 
+
+COMPANIONS = Repeat(label="Companions", choices=frozenset({"advisory", "story"}), max_rows=3)
+
+
+class Repeats(Base):
+    repeats = {"companions": COMPANIONS}
+
+    def test_each_row_is_stored_with_its_own_boxes(self):
+        self.client.post("/api/signup", data={
+            "contact": "someone@example.com", "t": self.stamp(),
+            "companions-0-name": "  Maria  ", "companions-0-help": ["advisory", "story"],
+            "companions-1-name": "Honey", "companions-1-help": "story",
+        })
+        (rec,) = self.records()
+        self.assertEqual(rec["companions"], [
+            {"name": "Maria", "help": ["advisory", "story"]},
+            {"name": "Honey", "help": ["story"]},
+        ])
+
+    def test_no_rows_is_an_empty_list(self):
+        self.post()
+        (rec,) = self.records()
+        self.assertEqual(rec["companions"], [])
+
+    def test_a_row_without_a_name_is_dropped_even_with_boxes_ticked(self):
+        self.post(**{"companions-0-name": "", "companions-0-help": "advisory",
+                     "companions-1-name": "Luna"})
+        (rec,) = self.records()
+        self.assertEqual(rec["companions"], [{"name": "Luna", "help": []}])
+
+    def test_an_undeclared_box_is_dropped(self):
+        self.post(**{"companions-0-name": "Maria", "companions-0-help": "board"})
+        (rec,) = self.records()
+        self.assertEqual(rec["companions"], [{"name": "Maria", "help": []}])
+
+    def test_rows_past_the_limit_are_ignored(self):
+        fields = {f"companions-{i}-name": f"C{i}" for i in range(6)}
+        self.post(**fields)
+        (rec,) = self.records()
+        self.assertEqual([r["name"] for r in rec["companions"]], ["C0", "C1", "C2"])
+
+    def test_a_name_is_capped_like_the_signups_own(self):
+        self.post(**{"companions-0-name": "x" * 5000})
+        (rec,) = self.records()
+        self.assertEqual(len(rec["companions"][0]["name"]), 500)
+
+    def test_a_link_in_a_name_is_refused(self):
+        self.assertEqual(self.post(**{"companions-0-name": "cheap-seo.biz"}).status_code, 400)
+        self.assertEqual(self.records(), [])
+
+    def test_an_undeclared_group_is_not_stored(self):
+        self.post(**{"pets-0-name": "Rex"})
+        (rec,) = self.records()
+        self.assertNotIn("pets", rec)
+
+
+class RepeatsInAdmin(Base):
+    secrets = True
+    repeats = {"companions": COMPANIONS}
+
+    def test_the_admin_list_shows_each_row_and_its_boxes(self):
+        self.post(**{"companions-0-name": "Maria <b>", "companions-0-help": "advisory"})
+        self.client.post("/login", data={"password": "hunter2"})
+        page = self.client.get("/admin").get_data(as_text=True)
+        self.assertIn("<th>Companions</th>", page)
+        self.assertIn("Maria &lt;b&gt;", page)
+        self.assertIn('<span class="tag">advisory</span>', page)
+
+
+class RepeatsConfig(unittest.TestCase):
+    def config(self, repeats):
+        return Config(
+            name="x",
+            site_dir=Path(tempfile.mkdtemp()),
+            languages=[Language(code="en", page="index.html")],
+            repeats=repeats,
+        )
+
+    def test_a_group_cannot_shadow_a_field_the_engine_owns(self):
+        for reserved in ("contact", "name", "note", "help", "lang", "ts", "kind", "t", "website", "company"):
+            with self.subTest(reserved=reserved), self.assertRaises(ValueError):
+                self.config({reserved: COMPANIONS})
+
+    def test_a_group_key_must_be_a_plain_identifier(self):
+        for bad in ("Companion names", "companion-names", "1st", ""):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                self.config({bad: COMPANIONS})
+
+    def test_a_group_needs_a_label_and_a_sane_row_limit(self):
+        for bad in (Repeat(label=""), Repeat(label="C", max_rows=0), Repeat(label="C", max_rows=500)):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                self.config({"companions": bad})
 
 class Admin(Base):
     secrets = True

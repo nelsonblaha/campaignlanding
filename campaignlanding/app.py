@@ -430,6 +430,12 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
             mimetype="text/html",
         )
 
+    def form_list(form, key: str) -> list[str]:
+        """Every value submitted under one name: a form's repeated checkbox, or a
+        JSON body's list or single string."""
+        raw = form.getlist(key) if hasattr(form, "getlist") else (form.get(key) or [])
+        return [raw] if isinstance(raw, str) else [str(v) for v in raw]
+
     def classify(contact: str) -> str | None:
         if EMAIL_RE.match(contact):
             return "email"
@@ -478,16 +484,30 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
 
         name = str(form.get("name") or "").strip()[: config.max_field]
         note = str(form.get("note") or "").strip()[: config.max_note]
+        # Rows the reader added, read by index up to each group's limit. Indexes
+        # with no name are skipped rather than ending the scan, so a row removed
+        # from the middle can't hide the ones after it.
+        groups = {
+            key: [
+                {
+                    "name": row_name,
+                    "help": sorted(
+                        {h for h in form_list(form, f"{key}-{i}-help") if h in rep.choices}
+                    ),
+                }
+                for i in range(rep.max_rows)
+                if (row_name := str(form.get(f"{key}-{i}-name") or "").strip()[: config.max_field])
+            ]
+            for key, rep in config.repeats.items()
+        }
+        row_names = [row["name"] for rows in groups.values() for row in rows]
         # Refused rather than silently dropped: a person who wrote a link gets told
         # so and can send the same words without it, while a script gets a 400 it
         # will not read. Checking after the contact field means a bot cannot use
         # this to probe which addresses are already valid.
-        if config.reject_links and (LINK_RE.search(note) or LINK_RE.search(name)):
+        if config.reject_links and any(LINK_RE.search(text) for text in (note, name, *row_names)):
             return fail("links", 400, lang)
 
-        raw_help = form.getlist("help") if hasattr(form, "getlist") else (form.get("help") or [])
-        if isinstance(raw_help, str):
-            raw_help = [raw_help]
 
         rt.store.append(
             {
@@ -496,7 +516,8 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
                 "contact": contact,
                 "name": name or None,
                 "note": note or None,
-                "help": sorted({h for h in raw_help if h in config.help_choices}),
+                "help": sorted({h for h in form_list(form, "help") if h in config.help_choices}),
+                **groups,
                 # Which language they were reading. Tells you what the list speaks.
                 "lang": lang.code,
             }
