@@ -613,6 +613,74 @@ class RepeatsConfig(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 self.config({"companions": bad})
 
+
+class ScriptTaggedLanguage(unittest.TestCase):
+    """A language coded by script, zh-Hant, which browsers never send as such:
+    they send a region, zh-TW or zh-HK. `accepts` is how the page answers them."""
+
+    def setUp(self):
+        root = Path(tempfile.mkdtemp())
+        site, data = root / "site", root / "data"
+        (site / "zh").mkdir(parents=True)
+        data.mkdir()
+        (site / "index.html").write_text(
+            PAGE.format(code="en", title="Fixture", up="", why_slug="why"), encoding="utf-8")
+        (site / "zh" / "index.html").write_text(
+            PAGE.format(code="zh-Hant", title="測試", up="../", why_slug="why"), encoding="utf-8")
+        (site / "style.css").write_text("", encoding="utf-8")
+        config = Config(
+            name="Fixture", site_dir=site, data_dir=data, min_fill_seconds=0.0,
+            languages=[
+                Language(code="en", page="index.html"),
+                Language(code="zh-Hant", page="zh/index.html", prefix="zh",
+                         accepts=("zh-TW", "zh-HK", "zh-MO")),
+            ],
+        )
+        self.client = create_app(config, read_env=False).test_client()
+
+    def lang_of(self, **headers):
+        html = self.client.get("/", headers=headers).get_data(as_text=True)
+        return re.search(r'<html lang="([^"]+)"', html).group(1)
+
+    def test_a_region_it_accepts_gets_it(self):
+        for tag in ("zh-TW", "zh-tw", "zh-HK", "zh-MO,en;q=0.5"):
+            with self.subTest(tag=tag):
+                self.assertEqual(self.lang_of(**{"Accept-Language": tag}), "zh-Hant")
+
+    def test_it_lives_at_its_prefix_and_its_code_redirects_there(self):
+        self.assertIn('<html lang="zh-Hant"', self.client.get("/zh/").get_data(as_text=True))
+        resp = self.client.get("/zh-Hant/")
+        self.assertEqual((resp.status_code, resp.headers["Location"]), (301, "/zh/"))
+
+    def test_its_own_code_gets_it(self):
+        self.assertEqual(self.lang_of(**{"Accept-Language": "zh-Hant"}), "zh-Hant")
+
+    def test_a_region_it_does_not_accept_does_not(self):
+        # zh-CN reads Simplified. A script-coded page claims only the regions it
+        # names, not every tag that shares its primary subtag.
+        for tag in ("zh-CN", "zh", "zh-SG"):
+            with self.subTest(tag=tag):
+                self.assertEqual(self.lang_of(**{"Accept-Language": tag}), "en")
+
+    def test_the_choice_cookie_matches_whatever_its_case(self):
+        for value in ("zh-Hant", "zh-hant", "ZH-HANT"):
+            with self.subTest(value=value):
+                self.client.set_cookie("lang", value)
+                self.assertEqual(self.lang_of(), "zh-Hant")
+
+    def test_a_signup_from_it_is_recorded_in_its_code(self):
+        # The form's lang field is lowercased on the way in; the record must still
+        # say zh-Hant, the configured code, not whatever case arrived.
+        page = self.client.get("/zh/").get_data(as_text=True)
+        stamp = re.search(r'name="t" value="([^"]+)"', page).group(1)
+        resp = self.client.post("/api/signup", data={"contact": "a@example.com", "lang": "zh-Hant",
+                                                     "t": stamp})
+        self.assertEqual(resp.status_code, 303)
+        store = Path(self.client.application.config["campaign"].store.file)
+        rows = [json.loads(line) for line in store.read_text().splitlines()]
+        self.assertEqual([r["lang"] for r in rows], ["zh-Hant"])
+
+
 class Admin(Base):
     secrets = True
 

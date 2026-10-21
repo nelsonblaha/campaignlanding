@@ -103,6 +103,11 @@ class Language:
     thanks_path: str = ""
     strings: Mapping[str, str] = field(default_factory=dict)
     join_words: Mapping[str, str] = field(default_factory=dict)
+    # Accept-Language tags beyond this language's own code that it should answer.
+    # A page coded by script, zh-Hant, is never asked for by that name: browsers
+    # send a region, zh-TW or zh-HK. Without this it is reachable only by its
+    # prefix. A bare code such as "es" already answers every es-* tag.
+    accepts: tuple[str, ...] = ()
 
     @property
     def home(self) -> str:
@@ -293,8 +298,12 @@ class Config:
         return self.languages[0]
 
     def language(self, code: str) -> Language | None:
+        """The language with this code, whatever its case. Language tags are
+        case-insensitive, and the form's field is lowercased on the way in, so an
+        exact match would lose zh-Hant to zh-hant."""
+        wanted = (code or "").lower()
         for lang in self.languages:
-            if lang.code == code:
+            if lang.code.lower() == wanted:
                 return lang
         return None
 

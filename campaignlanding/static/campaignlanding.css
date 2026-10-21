@@ -1621,3 +1621,98 @@ a.joininline.is-new, a.joininline.is-new b { color: var(--accent); }
 /* Section headings copy their own link (script.js: initTitleCopy). No cursor change:
    like the rail, it is undiscoverable on purpose and confirms after the fact. */
 .copy-title.is-copied { color: var(--verified); }
+
+/* ---------- language menu: for more languages than flags have room for ----------
+   Two flags fit beside the mark in the rail and at the end of the phone bar; six
+   don't, and a flag is the wrong label for a language that many countries speak.
+   So a site with more languages puts one <details class="lang-menu"> in .nav-lang
+   instead of the flags: a chip with the current language's short code, and the
+   list of languages by their own names. Native <details>, so it opens and closes
+   with JavaScript off. The options keep the .nav-flag class, which every section-
+   link rule in this sheet already excludes, and the scroll-spy only reads #links.
+
+   Last in the sheet, and four classes deep, on purpose: it has to beat the flag
+   sizing in both the rail block (.sectionnav a.nav-flag) and the phone bar
+   (.sectionnav .nav-lang .nav-flag), which equal specificity would lose to on
+   position. */
+.sectionnav .nav-lang .lang-menu { position: relative; }
+.sectionnav .nav-lang .lang-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 2.75rem;
+  height: 2.5rem;
+  padding: 0 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  user-select: none;
+}
+.sectionnav .nav-lang .lang-menu > summary::-webkit-details-marker { display: none; }
+.sectionnav .nav-lang .lang-menu > summary::after { content: "\25BE"; font-size: 0.85em; }
+.sectionnav .nav-lang .lang-menu > summary:hover,
+.sectionnav .nav-lang .lang-menu[open] > summary { color: var(--ink); border-color: var(--accent); }
+.sectionnav .nav-lang .lang-menu ul {
+  position: absolute;
+  z-index: 80;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.3rem 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+}
+.sectionnav .nav-lang .lang-menu .nav-flag {
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.6rem 0.95rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  /* The phone bar centres its labels; a list reads down its left edge. */
+  text-align: start;
+  color: var(--ink-2);
+  text-decoration: none;
+  filter: none;
+}
+.sectionnav .nav-lang .lang-menu a.nav-flag:hover { color: var(--accent); background: var(--sunken); }
+.sectionnav .nav-lang .lang-menu .nav-flag.is-current { color: var(--ink); font-weight: 600; }
+.sectionnav .nav-lang .lang-menu .nav-flag.is-current::after { content: none; }
+
+/* On a phone the menu lives in the footer bar, so it opens upward from the right. */
+@media (max-width: 52rem) {
+  .sectionnav .nav-lang .lang-menu ul {
+    top: auto;
+    bottom: calc(100% + 0.4rem);
+    left: auto;
+    right: 0;
+  }
+}
+
+/* ---------- Japanese and Chinese ----------
+   No spaces between words, so a browser left to itself breaks headings anywhere,
+   including in the middle of a word. auto-phrase breaks Japanese between phrases
+   where the browser supports it (Chromium 119+) and is ignored elsewhere. Strict
+   line breaking keeps small kana and closing punctuation off the start of a line.
+   Uppercase and wide letter-spacing do nothing useful for these scripts, so the
+   eyebrow and label styles drop the spacing. */
+:lang(ja) h1, :lang(ja) h2, :lang(ja) h3, :lang(ja) .lede { word-break: auto-phrase; }
+:lang(ja), :lang(zh-Hant) { line-break: strict; }
+:lang(ja) .eyebrow, :lang(ja) .sunline, :lang(zh-Hant) .eyebrow, :lang(zh-Hant) .sunline,
+:lang(ja) .field label, :lang(zh-Hant) .field label,
+:lang(ja) .checks legend, :lang(zh-Hant) .checks legend,
+:lang(ja) .repeat legend, :lang(zh-Hant) .repeat legend { letter-spacing: 0.04em; }

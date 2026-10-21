@@ -111,6 +111,38 @@ language's marker at nothing — it is not a link. On the non-primary page, link
 back to the primary language's explicit address (`/en/`), **not** to `/`, which
 negotiates and would hand a reader the language they were trying to leave.
 
+### More languages than flags have room for
+
+Two flags fit in the rail and the phone bar; six don't, and a flag is the wrong
+label for a language that many countries speak. Put one menu in `.nav-lang`
+instead, with the languages by their own names:
+
+```html
+<div class="nav-lang" aria-hidden="true">
+  <details class="lang-menu">
+    <summary aria-label="Language: English" title="Language">EN</summary>
+    <ul>
+      <li><span class="nav-flag is-current" aria-current="page" lang="en">English</span></li>
+      <li><a class="nav-flag" href="/es/" lang="es" hreflang="es" tabindex="-1">Español</a></li>
+      <li><a class="nav-flag" href="/zh/" lang="zh-Hant" hreflang="zh-Hant" tabindex="-1">繁體中文</a></li>
+    </ul>
+  </details>
+</div>
+```
+
+It opens downward from the rail and upward from the phone's footer bar, closes on
+an outside click, on Escape and once a language is chosen, and works as a plain
+`<details>` with JavaScript off. Keep `class="nav-flag"` on the options: every
+section-link rule excludes it. The hero's `.langbar` takes any number of languages
+as it is; separate them with `<span class="sep" aria-hidden="true">&middot;</span>`
+and leave out the `.flag` spans.
+
+A language coded by script rather than by country, such as `zh-Hant`, lives at
+its `prefix` (`/zh/`, with `/zh-Hant/` redirecting there). Browsers never ask for
+it by that name, so list the tags it should answer:
+`Language(code="zh-Hant", prefix="zh", accepts=("zh-TW", "zh-HK", "zh-MO"))`.
+A bare code such as `es` already answers every `es-*` tag.
+
 ## Tabs
 
 Several arguments in one section, one visible at a time. Standard ARIA:

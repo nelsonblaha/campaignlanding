@@ -225,6 +225,17 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
     #   - The cookie is written only by the client, when the reader switches.
     # ------------------------------------------------------------------
 
+    def answering(tag: str) -> Language | None:
+        """Which configured language answers this Accept-Language tag: its own
+        code or one it lists in `accepts`, exactly; failing that, a language whose
+        code is the tag's bare primary subtag, so "es" answers es-MX. A code with a
+        subtag of its own, such as zh-Hant, claims only what it names, because
+        zh-CN would rather not be handed Traditional characters."""
+        for lang in config.languages:
+            if tag == lang.code.lower() or tag in (a.lower() for a in lang.accepts):
+                return lang
+        return config.language(tag.split("-")[0])
+
     def negotiate(header: str) -> Language:
         """The configured language this browser ranks highest.
 
@@ -247,9 +258,9 @@ def create_app(config: Config, *, read_env: bool = True) -> Flask:
                         quality = float(value)
                     except ValueError:
                         quality = 0.0
-            primary_tag = tag.split("-")[0]
-            if primary_tag in config.codes:
-                best[primary_tag] = max(best.get(primary_tag, 0.0), quality)
+            lang = answering(tag)
+            if lang:
+                best[lang.code] = max(best.get(lang.code, 0.0), quality)
         floor = best.get(config.primary.code, 0.0)
         winner = config.primary
         for lang in config.languages[1:]:
@@ -579,16 +590,28 @@ a {{ color:inherit; text-underline-offset:3px; }}
         # one. Without that, the primary language's flag points at "/", which
         # negotiates, so a reader whose cookie says otherwise clicks it and gets
         # the language they were trying to leave: the switch is one-way.
+        #
+        # The address is the prefix, which is what every link and the script use;
+        # the primary language, which has none, uses its code. These used to be
+        # the code for everyone, which only worked while prefix and code agreed: a
+        # zh-Hant page at prefix "zh" was linked as /zh/ and served as /zh-Hant/.
+        _path = _lang.prefix or _lang.code
         app.add_url_rule(
-            f"/{_lang.code}/",
+            f"/{_path}/",
             endpoint=f"page_{_lang.code}",
             view_func=(lambda lang=_lang: render_page(lang)),
         )
         app.add_url_rule(
-            f"/{_lang.code}",
+            f"/{_path}",
             endpoint=f"page_{_lang.code}_bare",
-            view_func=(lambda code=_lang.code: redirect(f"/{code}/", code=301)),
+            view_func=(lambda path=_path: redirect(f"/{path}/", code=301)),
         )
+        if _path != _lang.code:
+            app.add_url_rule(
+                f"/{_lang.code}/",
+                endpoint=f"page_{_lang.code}_by_code",
+                view_func=(lambda path=_path: redirect(f"/{path}/", code=301)),
+            )
         app.add_url_rule(
             config.thanks_path(_lang),
             endpoint=f"thanks_{_lang.code}",

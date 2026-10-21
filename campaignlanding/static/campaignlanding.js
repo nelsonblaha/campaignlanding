@@ -456,9 +456,10 @@
       if (wide.matches) {
         docked.setAttribute('aria-hidden', next ? 'false' : 'true');
         hero.setAttribute('aria-hidden', next ? 'true' : 'false');
-        docked.querySelectorAll('a').forEach(function (a) {
+        docked.querySelectorAll('a, summary').forEach(function (a) {
           if (next) { a.removeAttribute('tabindex'); } else { a.setAttribute('tabindex', '-1'); }
         });
+        if (!next) closeMenus(docked);
       }
     }
     function narrowHandover() {
@@ -466,7 +467,7 @@
       // control, so it must be the live one regardless of scroll position.
       docked.setAttribute('aria-hidden', 'false');
       hero.setAttribute('aria-hidden', 'true');
-      docked.querySelectorAll('a').forEach(function (a) { a.removeAttribute('tabindex'); });
+      docked.querySelectorAll('a, summary').forEach(function (a) { a.removeAttribute('tabindex'); });
     }
 
     window.addEventListener('scroll', apply, { passive: true, signal: signal });
@@ -477,6 +478,34 @@
       apply();
     }, { signal: signal });
     apply();
+  }
+
+  /* ---- language menu ----
+     <details> opens and closes on its own; this adds what a menu is expected to
+     do besides: close on a click outside it, on Escape, and once a language is
+     chosen. Without JavaScript it simply stays open until clicked again. */
+  function closeMenus(within) {
+    (within || document).querySelectorAll('details.lang-menu[open]').forEach(function (d) {
+      d.open = false;
+    });
+  }
+
+  function initLangMenu(signal) {
+    var menus = document.querySelectorAll('details.lang-menu');
+    if (!menus.length) return;
+    document.addEventListener('click', function (e) {
+      menus.forEach(function (d) {
+        if (d.open && (!d.contains(e.target) || e.target.closest('a[hreflang]'))) d.open = false;
+      });
+    }, { signal: signal });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      menus.forEach(function (d) {
+        if (!d.open) return;
+        d.open = false;
+        d.querySelector('summary').focus();
+      });
+    }, { signal: signal });
   }
 
   /* ---- language switch in place ----
@@ -926,6 +955,7 @@
     initTabs(restoreTab);
     initSpy(signal);
     initLangDock(signal);
+    initLangMenu(signal);
     initLangSwap(signal);
     tidyLanguageUrl();
     initNavIcons();

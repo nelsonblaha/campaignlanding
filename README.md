@@ -11,9 +11,13 @@ The page is HTML you write and own. This package is the machinery behind it.
 
 ## What you get
 
-- **Two languages at three addresses.** `/` adapts to the reader's browser and
-  stays `/`. `/en/` and `/es/` mean themselves. The link people copy and paste
-  around is the neutral one, so it doesn't force a language on whoever opens it.
+- **Every language at its own address, and one that adapts.** `/` adapts to the
+  reader's browser and stays `/`. `/en/`, `/es/` and the rest mean themselves. The
+  link people copy and paste around is the neutral one, so it doesn't force a
+  language on whoever opens it.
+- **Any number of languages.** Two can be flags; more get a compact menu, by each
+  language's own name. Script-coded languages such as Traditional Chinese answer the
+  browser regions you name.
 - **A language switch that doesn't reload the page.** It fetches the other
   language, swaps the body, and restores your scroll position and open tab.
 - **Addresses for parts of the page.** `/why`, `/roadmap`, `/services` — in both
@@ -149,7 +153,7 @@ well-formed, non-empty, and wrong.
 python -m unittest discover tests
 ```
 
-93 of them, no pytest, no fixtures library. They cover the parts that are easy to
+99 of them, no pytest, no fixtures library. They cover the parts that are easy to
 get subtly wrong: negotiation and the one-way-switch regression, the honeypot
 answering success, the watermark moving only after the list renders, `/api/`
 staying exempt from the canonical redirect because a 301 turns a POST into a GET.
