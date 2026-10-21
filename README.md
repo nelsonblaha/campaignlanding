@@ -119,10 +119,15 @@ password hash configured — the default — `/login` and `/admin` return 404 an
 page contains no reference to them, so somebody else's copy of your repo exposes
 nothing.
 
-**Assets.** Every `.css` and `.js` reference in your HTML is rewritten with a
-content hash at serve time, and the hashed URL is immutable while the bare one
-revalidates. Pages are `no-cache`. A returning visitor can never run new HTML
-against an old stylesheet.
+**Assets.** Every `href` and `src` in your HTML that points at one of your own
+files (stylesheets, scripts, images, icons, fonts) is rewritten with a content
+hash at serve time. Only the hash of the file as it is now is served immutable;
+a bare URL, or an old hash, revalidates. Pages are `no-cache`. So a returning
+visitor can never run new HTML against an old stylesheet, and a changed picture
+shows up on an ordinary refresh, even behind a CDN that caches static files for
+hours whatever the origin says. Not rewritten: `url()` inside CSS, `srcset`, and
+any reference that already has a query string, which is taken to be versioned
+by hand.
 
 ## Deploying
 
@@ -141,7 +146,7 @@ well-formed, non-empty, and wrong.
 python -m unittest discover tests
 ```
 
-79 of them, no pytest, no fixtures library. They cover the parts that are easy to
+81 of them, no pytest, no fixtures library. They cover the parts that are easy to
 get subtly wrong: negotiation and the one-way-switch regression, the honeypot
 answering success, the watermark moving only after the list renders, `/api/`
 staying exempt from the canonical redirect because a 301 turns a POST into a GET.

@@ -37,7 +37,16 @@ LINK_RE = re.compile(
     r"(https?://|www\.|\b[a-z0-9-]+\.(com|net|org|io|ru|cn|info|biz|xyz|top|shop|club|online|site)\b)",
     re.IGNORECASE,
 )
-ASSET_RE = re.compile(r'\b(href|src)="([^"]+\.(?:css|js))"')
+# Every file the page loads, not only its stylesheet and script. A picture changed
+# behind an unchanged URL is exactly what a cache in front of the site keeps
+# serving: Cloudflare's browser TTL rewrites even `no-cache` on static types to
+# four hours, so the only reference no cache can hold back is a new one. A
+# reference that already carries a query string is the author versioning by hand,
+# and is left alone.
+ASSET_RE = re.compile(
+    r'\b(href|src)="([^"?#]+\.(?:css|js|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|webmanifest))"',
+    re.IGNORECASE,
+)
 BODY_RE = re.compile(r"<body([^>]*)>", re.IGNORECASE)
 # Written literally into the form's hidden field by the page author; replaced with
 # a signed stamp at render time.
@@ -629,14 +638,17 @@ a {{ color:inherit; text-underline-offset:3px; }}
         if not found:
             return Response("Not found", status=404, mimetype="text/plain")
         resp = send_from_directory(found.parent, found.name)
-        if found.suffix in (".css", ".js"):
-            # Immutable only when addressed by content hash; otherwise revalidate,
-            # so a bare link can never pin a stale copy.
-            resp.headers["Cache-Control"] = (
-                "public, max-age=31536000, immutable"
-                if request.args.get("v")
-                else "no-cache, must-revalidate"
-            )
+        # Immutable only when addressed by the hash of the file as it is now;
+        # anything else revalidates. A bare link can then never pin a stale copy,
+        # and neither can an old hash: answering one with today's bytes and
+        # "immutable" would file those bytes under the old address for a year,
+        # which is what a rollback would then be served.
+        current = rt.version(path)
+        resp.headers["Cache-Control"] = (
+            "public, max-age=31536000, immutable"
+            if current and request.args.get("v") == current
+            else "no-cache, must-revalidate"
+        )
         return resp
 
     admin_module.register(app, rt)

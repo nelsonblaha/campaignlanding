@@ -7,6 +7,7 @@ that needs installing something to run is a test suite people skip.
 """
 
 import json
+import re
 import shutil
 import tempfile
 import time
@@ -23,6 +24,12 @@ PAGE = """<!doctype html>
 <head><title>{title}</title><link rel="stylesheet" href="{up}style.css"></head>
 <body>
 <nav class="sectionnav"><a href="#why" data-slug="{why_slug}">Why</a></nav>
+<link rel="icon" href="{up}img/mark.svg">
+<img id="photo" src="{up}img/photo.png">
+<img id="theirs" src="https://example.org/photo.png">
+<img id="inline" src="data:image/png;base64,AAAA">
+<img id="by-hand" src="{up}img/mark.svg?v=3">
+<img id="missing" src="{up}img/missing.png">
 <section id="why" data-section="why"><div role="tablist">
   <button class="tab" role="tab" id="tab-one" aria-selected="true">One</button>
 </div></section>
@@ -54,6 +61,9 @@ class Base(unittest.TestCase):
             PAGE.format(code="es", title="Prueba", up="../", why_slug="por-que"), encoding="utf-8"
         )
         (site / "style.css").write_text("/* the campaign's own */\n", encoding="utf-8")
+        (site / "img").mkdir()
+        (site / "img" / "mark.svg").write_text("<svg xmlns=\"http://www.w3.org/2000/svg\"/>", encoding="utf-8")
+        (site / "img" / "photo.png").write_bytes(b"\x89PNG fixture")
 
         config = Config(
             name="Fixture",
@@ -188,9 +198,37 @@ class Assets(Base):
         body = self.client.get("/style.css").get_data(as_text=True)
         self.assertIn("the campaign's own", body)
 
-    def test_only_a_hashed_url_is_immutable(self):
-        self.assertIn("no-cache", self.client.get("/style.css").headers["Cache-Control"])
-        self.assertIn("immutable", self.client.get("/style.css?v=abc").headers["Cache-Control"])
+    def test_images_and_icons_are_content_hashed_too(self):
+        # A changed picture behind an unchanged URL is what a cache in front of the
+        # site keeps serving: Cloudflare's browser TTL turns even no-cache into four
+        # hours on static types. Only a new address gets past every cache.
+        html = self.client.get("/").get_data(as_text=True)
+        self.assertRegex(html, r'href="img/mark\.svg\?v=[0-9a-f]{10}"')
+        self.assertRegex(html, r'id="photo" src="img/photo\.png\?v=[0-9a-f]{10}"')
+        es = self.client.get("/es/").get_data(as_text=True)
+        self.assertRegex(es, r'id="photo" src="\.\./img/photo\.png\?v=[0-9a-f]{10}"')
+
+    def test_what_is_not_ours_or_already_versioned_is_left_alone(self):
+        html = self.client.get("/").get_data(as_text=True)
+        self.assertIn('id="theirs" src="https://example.org/photo.png"', html)
+        self.assertIn('id="inline" src="data:image/png;base64,AAAA"', html)
+        self.assertIn('id="by-hand" src="img/mark.svg?v=3"', html)
+        self.assertIn('id="missing" src="img/missing.png"', html)
+
+    def test_only_the_current_hash_is_immutable(self):
+        html = self.client.get("/").get_data(as_text=True)
+        for path in ("style.css", "img/photo.png"):
+            current = re.search(re.escape(path) + r"\?v=([0-9a-f]{10})", html).group(1)
+            with self.subTest(path=path):
+                self.assertIn("no-cache", self.client.get(f"/{path}").headers["Cache-Control"])
+                self.assertIn(
+                    "immutable", self.client.get(f"/{path}?v={current}").headers["Cache-Control"]
+                )
+                # A hash that is not today's file's must not pin today's file under
+                # it forever, or a rollback would serve the wrong bytes for a year.
+                self.assertIn(
+                    "no-cache", self.client.get(f"/{path}?v=0000000000").headers["Cache-Control"]
+                )
 
     def test_no_climbing_out_of_the_site_directory(self):
         self.assertEqual(self.client.get("/../pyproject.toml").status_code, 404)
